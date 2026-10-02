@@ -10,9 +10,10 @@ const client = new CodexUsageClient();
 function createWindow() {
   window = new BrowserWindow({
     width: 390,
-    height: 520,
+    height: 600,
+    useContentSize: true,
     minWidth: 350,
-    minHeight: 460,
+    minHeight: 540,
     show: false,
     title: 'Codex Usage',
     backgroundColor: '#10120f',

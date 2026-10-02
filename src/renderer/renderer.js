@@ -19,10 +19,10 @@ function renderWindow(key, value) {
   const used = value.usedPercent;
   const remaining = Math.max(0, 100 - used);
   $(`${key}Remaining`).textContent = `${remaining}% left`;
-  $(`${key}Used`).textContent = `${used}% used`;
+  $(`${key}Left`).textContent = `${remaining}% left`;
   const bar = $(`${key}Bar`);
-  bar.style.width = `${used}%`;
-  bar.className = `bar${used >= 90 ? ' danger' : used >= 70 ? ' warn' : ''}`;
+  bar.style.width = `${remaining}%`;
+  bar.className = `bar${remaining <= 10 ? ' danger' : remaining <= 30 ? ' warn' : ''}`;
   $(`${key}Reset`).textContent = relativeReset(value.resetsAt);
 }
 
