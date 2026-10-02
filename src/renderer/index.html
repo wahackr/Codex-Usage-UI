@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; script-src 'self'">
+  <title>Codex Usage</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main>
+    <header>
+      <div><div class="eyebrow">CHATGPT PLAN</div><h1>Codex usage</h1></div>
+      <button id="refresh" class="icon" title="Refresh" aria-label="Refresh">↻</button>
+    </header>
+    <div id="status" class="status"><span></span><span id="statusText">Connecting…</span></div>
+    <section class="meters">
+      <article class="meter" data-key="primary">
+        <div class="meterTop"><div><span class="label">5-hour window</span><strong id="primaryRemaining">—</strong></div><span id="primaryUsed" class="pill">—</span></div>
+        <div class="track"><div id="primaryBar" class="bar"></div></div>
+        <p id="primaryReset">Waiting for live usage</p>
+      </article>
+      <article class="meter" data-key="secondary">
+        <div class="meterTop"><div><span class="label">Weekly window</span><strong id="secondaryRemaining">—</strong></div><span id="secondaryUsed" class="pill">—</span></div>
+        <div class="track"><div id="secondaryBar" class="bar"></div></div>
+        <p id="secondaryReset">Waiting for live usage</p>
+      </article>
+    </section>
+    <section class="facts">
+      <div><span>Plan</span><b id="plan">—</b></div>
+      <div><span>Credits</span><b id="credits">—</b></div>
+      <div><span>Reset passes</span><b id="resetCredits">—</b></div>
+    </section>
+    <footer>
+      <div class="toggles">
+        <label><input id="alwaysOnTop" type="checkbox"><span>Always on top</span></label>
+        <label><input id="openAtLogin" type="checkbox"><span>Launch at login</span></label>
+      </div>
+      <button id="openUsage" class="link">Open Usage settings ↗</button>
+      <p id="updated">Not updated yet</p>
+    </footer>
+  </main>
+  <script src="renderer.js"></script>
+</body>
+</html>
