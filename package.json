@@ -1,11 +1,11 @@
 {
   "name": "codex-usage-widget",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Cross-platform desktop widget for ChatGPT plan Codex usage limits",
-  "homepage": "https://developers.openai.com/codex/",
+  "homepage": "https://github.com/wahackr/Codex-Usage-UI",
   "author": {
-    "name": "Codex Usage Widget Contributors",
-    "email": "noreply@localhost"
+    "name": "Wahackr",
+    "email": "wahbigbig@gmail.com"
   },
   "main": "src/main.cjs",
   "type": "commonjs",
