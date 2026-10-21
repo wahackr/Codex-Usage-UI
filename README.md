@@ -48,6 +48,30 @@ npm run build:linux
 
 Artifacts are written to `dist/`.
 
+## Continuous integration and releases
+
+Two GitHub Actions workflows drive the pipeline:
+
+- `.github/workflows/ci.yml` runs the unit tests on `ubuntu-latest` and `windows-latest` for every push to `master` and every pull request.
+- `.github/workflows/release.yml` builds Linux (`AppImage` + `deb`) and Windows (`NSIS setup` + `portable`) on their native runners, then publishes a GitHub Release with the installers attached.
+
+### Version handling
+
+The git tag decides the release version: pushing `v0.2.0` publishes `0.2.0`, and the AppImage, the `.deb`, and both Windows installers (including their file properties) are labeled `0.2.0`. `package.json` does not have to be bumped first - the workflow rewrites the version in its own checkout before building and emits a warning so you can commit the bump afterwards. Versions must look like `X.Y.Z` or `X.Y.Z-prerelease`; a version containing `-` is published as a GitHub prerelease.
+
+Ship a release by bumping and tagging in one commit:
+
+```bash
+npm version 0.2.0
+git commit -am "Release 0.2.0"
+git tag v0.2.0
+git push origin master --tags
+```
+
+Re-running an existing tag stops instead of overwriting a published release. To repair one, run the Release workflow manually with `force` checked. A manual run also takes an explicit `version` input and creates that tag at the commit it runs on.
+
+Installers are unsigned: no code-signing identity or macOS notarization is configured, so SmartScreen warns on first run. macOS packages are not published; add a matrix entry with `macos-latest` and `build:mac` if you want them.
+
 ## Privacy and behavior
 
 The app launches `codex app-server --stdio` and calls the read-only `account/rateLimits/read` method. Credentials remain managed by Codex. No conversation is started, and the app never reads or stores your authentication tokens.
