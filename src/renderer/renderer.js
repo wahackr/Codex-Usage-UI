@@ -10,7 +10,7 @@ function relativeReset(timestamp) {
   const hours = Math.floor((minutes % 1440) / 60);
   const mins = minutes % 60;
   const relative = days ? `${days}d ${hours}h` : hours ? `${hours}h ${mins}m` : `${mins}m`;
-  const exact = new Intl.DateTimeFormat(undefined, { weekday:'short', hour:'numeric', minute:'2-digit' }).format(timestamp);
+  const exact = new Intl.DateTimeFormat(undefined, { weekday: 'short', hour: 'numeric', minute: '2-digit' }).format(timestamp);
   return `Resets in ${relative} · ${exact}`;
 }
 
@@ -44,7 +44,7 @@ function render(result) {
   $('plan').textContent = usage.planType;
   $('credits').textContent = usage.credits?.unlimited ? 'Unlimited' : usage.credits?.hasCredits ? (usage.credits.balance || 'Available') : 'None';
   $('resetCredits').textContent = String(usage.resetCredits);
-  $('updated').textContent = `Updated ${new Intl.DateTimeFormat(undefined, { hour:'numeric', minute:'2-digit', second:'2-digit' }).format(usage.fetchedAt)} · ${usage.source === 'live' ? 'live from OpenAI' : 'local Codex cache'}`;
+  $('updated').textContent = `Updated ${new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit', second: '2-digit' }).format(usage.fetchedAt)} · ${usage.source === 'live' ? 'live from OpenAI' : 'local Codex cache'}`;
 }
 
 async function refresh() {
