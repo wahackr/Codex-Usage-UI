@@ -1,11 +1,39 @@
-const { app, BrowserWindow, ipcMain, Menu, Tray, nativeImage, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, Menu, Tray, nativeImage, nativeTheme, shell } = require('electron');
 const path = require('node:path');
+const fs = require('node:fs');
 const { CodexUsageClient, normalizeUsage, readLocalSnapshot } = require('./codex-client.cjs');
 
 let window;
 let tray;
 let refreshTimer;
 const client = new CodexUsageClient();
+
+const themeSources = ['system', 'light', 'dark'];
+let themeSource = 'system';
+
+function loadTheme() {
+  try {
+    const saved = JSON.parse(fs.readFileSync(path.join(app.getPath('userData'), 'widget-theme.json'), 'utf8'));
+    if (themeSources.includes(saved.theme)) themeSource = saved.theme;
+  } catch {}
+  return themeSource;
+}
+
+function saveTheme() {
+  try {
+    fs.mkdirSync(app.getPath('userData'), { recursive: true });
+    fs.writeFileSync(path.join(app.getPath('userData'), 'widget-theme.json'), JSON.stringify({ theme: themeSource }));
+  } catch {}
+}
+
+function backgroundForTheme() {
+  return nativeTheme.shouldUseDarkColors ? '#10120f' : '#f5f7f0';
+}
+
+function applyTheme() {
+  nativeTheme.themeSource = themeSource;
+  window?.setBackgroundColor(backgroundForTheme());
+}
 
 function createWindow() {
   window = new BrowserWindow({
@@ -16,7 +44,7 @@ function createWindow() {
     minHeight: 540,
     show: false,
     title: 'Codex Usage',
-    backgroundColor: '#10120f',
+    backgroundColor: backgroundForTheme(),
     titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
     autoHideMenuBar: true,
     webPreferences: {
@@ -69,13 +97,23 @@ ipcMain.handle('app:setLoginItem', (_event, value) => {
   app.setLoginItemSettings({ openAtLogin: Boolean(value) });
   return app.getLoginItemSettings().openAtLogin;
 });
+ipcMain.handle('app:setTheme', (_event, value) => {
+  themeSource = themeSources.includes(value) ? value : 'system';
+  saveTheme();
+  applyTheme();
+  return themeSource;
+});
 ipcMain.handle('app:getSettings', () => ({
   alwaysOnTop: window?.isAlwaysOnTop() ?? false,
-  openAtLogin: app.getLoginItemSettings().openAtLogin
+  openAtLogin: app.getLoginItemSettings().openAtLogin,
+  theme: themeSource
 }));
 ipcMain.handle('app:openUsage', () => shell.openExternal('https://chatgpt.com/#settings/Usage'));
 
 app.whenReady().then(() => {
+  loadTheme();
+  applyTheme();
+  nativeTheme.on('updated', () => window?.setBackgroundColor(backgroundForTheme()));
   createWindow();
   createTray();
   refresh();
