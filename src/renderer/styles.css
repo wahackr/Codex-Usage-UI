@@ -3,6 +3,7 @@
 body { margin:0; min-height:100vh; background:radial-gradient(circle at 90% 0,#25311f 0,transparent 38%),var(--bg); color:var(--ink); font:14px/1.4 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif; }
 main { padding:27px 25px 22px; }
 header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+.headerActions { display:flex; gap:8px; }
 .eyebrow { color:var(--lime); font-size:10px; font-weight:800; letter-spacing:.18em; }
 h1 { margin:2px 0 0; font-size:27px; letter-spacing:-.04em; }
 button { font:inherit; color:inherit; }
@@ -33,3 +34,22 @@ label { display:flex; align-items:center; gap:6px; cursor:pointer; }
 input { accent-color:var(--lime); }
 .link { border:0; padding:0; margin-top:15px; background:transparent; color:var(--lime); cursor:pointer; font-size:12px; }
 footer p { margin:6px 0 0; color:#6f766a; font-size:10px; }
+
+/* Mini mode: a single Chrome-tab-height strip. */
+.strip { display:none; }
+body.mini main { padding:0; }
+body.mini header,body.mini .status,body.mini .meters,body.mini .facts,body.mini footer { display:none; }
+body.mini .strip {
+  display:flex; align-items:center; gap:10px; height:46px; padding:0 10px;
+  background:linear-gradient(145deg,#1e221c,#181b17); border-bottom:1px solid var(--line);
+  -webkit-app-region:drag; user-select:none;
+}
+.stripChip { display:flex; align-items:baseline; gap:5px; }
+.stripChip b { font-size:15px; letter-spacing:-.03em; }
+.stripChip i { color:var(--muted); font-style:normal; font-size:10px; text-transform:uppercase; letter-spacing:.08em; }
+.stripChip.warn b { color:var(--amber); }.stripChip.danger b { color:var(--red); }
+.stripReset { margin-left:auto; color:var(--muted); font-size:11px; white-space:nowrap; }
+.stripDot { width:7px; height:7px; border-radius:50%; background:var(--amber); box-shadow:0 0 8px currentColor; }
+.stripDot.live { background:var(--lime); }.stripDot.error { background:var(--red); }
+.stripBtn { border:1px solid var(--line); border-radius:9px; background:#1c201a; color:inherit; width:26px; height:26px; font-size:13px; cursor:pointer; -webkit-app-region:no-drag; }
+.stripBtn:hover { border-color:#4d5747; }
