@@ -1,12 +1,19 @@
 const $ = (id) => document.getElementById(id);
 let refreshing = false;
 let mini = false;
+const themes = ['system', 'light', 'dark'];
 
 function setMini(value) {
   mini = Boolean(value);
   document.body.classList.toggle('mini', mini);
   $('strip').setAttribute('aria-hidden', String(!mini));
   $('mini').title = mini ? 'Exit mini mode' : 'Mini mode';
+}
+
+function renderTheme(active) {
+  for (const button of $('themePicker').children) {
+    button.classList.toggle('active', button.dataset.theme === active);
+  }
 }
 
 function relativeReset(timestamp) {
@@ -18,7 +25,7 @@ function relativeReset(timestamp) {
   const hours = Math.floor((minutes % 1440) / 60);
   const mins = minutes % 60;
   const relative = days ? `${days}d ${hours}h` : hours ? `${hours}h ${mins}m` : `${mins}m`;
-  const exact = new Intl.DateTimeFormat(undefined, { weekday:'short', hour:'numeric', minute:'2-digit' }).format(timestamp);
+  const exact = new Intl.DateTimeFormat(undefined, { weekday: 'short', hour: 'numeric', minute: '2-digit' }).format(timestamp);
   return `Resets in ${relative} · ${exact}`;
 }
 
@@ -63,7 +70,7 @@ function render(result) {
   $('plan').textContent = usage.planType;
   $('credits').textContent = usage.credits?.unlimited ? 'Unlimited' : usage.credits?.hasCredits ? (usage.credits.balance || 'Available') : 'None';
   $('resetCredits').textContent = String(usage.resetCredits);
-  $('updated').textContent = `Updated ${new Intl.DateTimeFormat(undefined, { hour:'numeric', minute:'2-digit', second:'2-digit' }).format(usage.fetchedAt)} · ${usage.source === 'live' ? 'live from OpenAI' : 'local Codex cache'}`;
+  $('updated').textContent = `Updated ${new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit', second: '2-digit' }).format(usage.fetchedAt)} · ${usage.source === 'live' ? 'live from OpenAI' : 'local Codex cache'}`;
   const resets = [usage.primary?.resetsAt, usage.secondary?.resetsAt].filter(Boolean).sort((a, b) => a - b);
   $('stripReset').textContent = shortReset(resets[0]);
 }
@@ -91,11 +98,17 @@ $('expand').addEventListener('click', () => window.codexUsage.setMiniMode(false)
 $('openUsage').addEventListener('click', () => window.codexUsage.openUsage());
 $('alwaysOnTop').addEventListener('change', (event) => window.codexUsage.setAlwaysOnTop(event.target.checked));
 $('openAtLogin').addEventListener('change', (event) => window.codexUsage.setOpenAtLogin(event.target.checked));
+$('themePicker').addEventListener('click', async (event) => {
+  const theme = event.target.dataset.theme;
+  if (!themes.includes(theme)) return;
+  renderTheme(await window.codexUsage.setTheme(theme));
+});
 window.codexUsage.onUpdate(render);
 window.codexUsage.onModeUpdate(setMini);
 window.codexUsage.getSettings().then((settings) => {
   $('alwaysOnTop').checked = settings.alwaysOnTop;
   $('openAtLogin').checked = settings.openAtLogin;
   setMini(settings.mini);
+  renderTheme(settings.theme || 'system');
 });
 refresh();

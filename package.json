@@ -11,6 +11,8 @@
   "type": "commonjs",
   "scripts": {
     "start": "electron .",
+    "generate:icon": "node scripts/generate-tray-icon.cjs",
+    "prestart": "node scripts/generate-tray-icon.cjs",
     "fix:linux-sandbox": "bash scripts/fix-linux-sandbox.sh",
     "test": "node test/codex-client.test.cjs",
     "build": "electron-builder",

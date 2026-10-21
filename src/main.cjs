@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, Menu, Tray, nativeImage, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, Menu, Tray, nativeImage, nativeTheme, shell } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 const { CodexUsageClient, normalizeUsage, readLocalSnapshot } = require('./codex-client.cjs');
@@ -27,6 +27,33 @@ function saveMode() {
   catch { /* settings are best-effort */ }
 }
 
+const themeSources = ['system', 'light', 'dark'];
+let themeSource = 'system';
+
+function loadTheme() {
+  try {
+    const saved = JSON.parse(fs.readFileSync(path.join(app.getPath('userData'), 'widget-theme.json'), 'utf8'));
+    if (themeSources.includes(saved.theme)) themeSource = saved.theme;
+  } catch {}
+  return themeSource;
+}
+
+function saveTheme() {
+  try {
+    fs.mkdirSync(app.getPath('userData'), { recursive: true });
+    fs.writeFileSync(path.join(app.getPath('userData'), 'widget-theme.json'), JSON.stringify({ theme: themeSource }));
+  } catch {}
+}
+
+function backgroundForTheme() {
+  return nativeTheme.shouldUseDarkColors ? '#10120f' : '#f5f7f0';
+}
+
+function applyTheme() {
+  nativeTheme.themeSource = themeSource;
+  window?.setBackgroundColor(backgroundForTheme());
+}
+
 function createWindow() {
   const size = miniMode ? MINI_SIZE : FULL_SIZE;
   window = new BrowserWindow({
@@ -44,7 +71,7 @@ function createWindow() {
     skipTaskbar: miniMode,
     show: false,
     title: 'Codex Usage',
-    backgroundColor: '#10120f',
+    backgroundColor: backgroundForTheme(),
     titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
     autoHideMenuBar: true,
     webPreferences: {
@@ -100,8 +127,11 @@ function trayMenu() {
 }
 
 function createTray() {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><rect width="32" height="32" rx="8" fill="#b8f36b"/><path d="M9 16a7 7 0 0 1 11-5.7M23 16a7 7 0 0 1-11 5.7" fill="none" stroke="#172014" stroke-width="3" stroke-linecap="round"/></svg>`;
-  tray = new Tray(nativeImage.createFromDataURL(`data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`));
+  // nativeImage cannot decode SVG data URLs, which left an empty (invisible)
+  // tray icon that still occupied a slot. Use a real PNG from src/assets.
+  const icon = nativeImage.createFromPath(path.join(__dirname, 'assets', 'tray.png'));
+  if (icon.isEmpty()) console.warn('Tray icon missing: run npm run generate:icon');
+  tray = new Tray(icon);
   tray.setToolTip('Codex Usage Widget');
   tray.setContextMenu(trayMenu());
   tray.on('click', () => { window.show(); window.focus(); });
@@ -136,15 +166,25 @@ ipcMain.handle('app:setLoginItem', (_event, value) => {
   app.setLoginItemSettings({ openAtLogin: Boolean(value) });
   return app.getLoginItemSettings().openAtLogin;
 });
+ipcMain.handle('app:setTheme', (_event, value) => {
+  themeSource = themeSources.includes(value) ? value : 'system';
+  saveTheme();
+  applyTheme();
+  return themeSource;
+});
 ipcMain.handle('app:getSettings', () => ({
   alwaysOnTop: window?.isAlwaysOnTop() ?? false,
   openAtLogin: app.getLoginItemSettings().openAtLogin,
-  mini: miniMode
+  mini: miniMode,
+  theme: themeSource
 }));
 ipcMain.handle('app:openUsage', () => shell.openExternal('https://chatgpt.com/#settings/Usage'));
 
 app.whenReady().then(() => {
   loadMode();
+  loadTheme();
+  applyTheme();
+  nativeTheme.on('updated', () => window?.setBackgroundColor(backgroundForTheme()));
   createWindow();
   createTray();
   refresh();
