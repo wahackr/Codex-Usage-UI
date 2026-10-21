@@ -4,7 +4,8 @@
   "description": "Cross-platform desktop widget for ChatGPT plan Codex usage limits",
   "homepage": "https://github.com/wahackr/Codex-Usage-UI",
   "author": {
-    "name": "Wahackr"
+    "name": "Wahackr",
+    "email": "wahbigbig@gmail.com"
   },
   "main": "src/main.cjs",
   "type": "commonjs",
