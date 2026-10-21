@@ -62,8 +62,11 @@ function createWindow() {
 }
 
 function createTray() {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><rect width="32" height="32" rx="8" fill="#b8f36b"/><path d="M9 16a7 7 0 0 1 11-5.7M23 16a7 7 0 0 1-11 5.7" fill="none" stroke="#172014" stroke-width="3" stroke-linecap="round"/></svg>`;
-  tray = new Tray(nativeImage.createFromDataURL(`data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`));
+  // nativeImage cannot decode SVG data URLs, which left an empty (invisible)
+  // tray icon that still occupied a slot. Use a real PNG from src/assets.
+  const icon = nativeImage.createFromPath(path.join(__dirname, 'assets', 'tray.png'));
+  if (icon.isEmpty()) console.warn('Tray icon missing: run npm run generate:icon');
+  tray = new Tray(icon);
   tray.setToolTip('Codex Usage Widget');
   tray.setContextMenu(Menu.buildFromTemplate([
     { label: 'Show usage', click: () => { window.show(); window.focus(); } },
