@@ -11,9 +11,19 @@
   <main>
     <header>
       <div><div class="eyebrow">CHATGPT PLAN</div><h1>Codex usage</h1></div>
-      <button id="refresh" class="icon" title="Refresh" aria-label="Refresh">↻</button>
+      <div class="headerActions">
+        <button id="mini" class="icon" title="Mini mode" aria-label="Toggle mini mode">▤</button>
+        <button id="refresh" class="icon" title="Refresh" aria-label="Refresh">↻</button>
+      </div>
     </header>
     <div id="status" class="status"><span></span><span id="statusText">Connecting…</span></div>
+    <section id="strip" class="strip" aria-hidden="true">
+      <span class="stripChip" data-key="primary"><b id="stripPrimary">—</b><i>5h</i></span>
+      <span class="stripChip" data-key="secondary"><b id="stripSecondary">—</b><i>week</i></span>
+      <span id="stripReset" class="stripReset">—</span>
+      <span id="stripDot" class="stripDot"></span>
+      <button id="expand" class="stripBtn" title="Exit mini mode" aria-label="Exit mini mode">▢</button>
+    </section>
     <section class="meters">
       <article class="meter" data-key="primary">
         <div class="meterTop"><div><span class="label">5-hour window</span><strong id="primaryRemaining">—</strong></div><span id="primaryLeft" class="pill">—</span></div>

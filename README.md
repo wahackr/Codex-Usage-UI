@@ -18,6 +18,10 @@ npm start
 
 The app refreshes every minute and can live in the system tray. Set `CODEX_BIN` to the full Codex executable path if `codex` is not on the GUI application's `PATH`.
 
+### Mini mode
+
+A compact, frameless strip about the height of a Chrome tab bar (46px) showing both window percentages, the next reset countdown, and a live/stale indicator. Toggle it with the ▤ button, the tray menu, or the ▢ button in the strip; the strip is draggable. The choice is remembered across restarts.
+
 ## Light and dark mode
 
 The widget follows your OS theme by default. Use the Auto / Light / Dark control in the footer to override it; the choice is remembered between launches. Overriding the theme also affects native window chrome, and the palette swaps instantly with no reload.

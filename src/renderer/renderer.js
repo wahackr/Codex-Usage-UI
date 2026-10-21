@@ -1,6 +1,14 @@
 const $ = (id) => document.getElementById(id);
 let refreshing = false;
+let mini = false;
 const themes = ['system', 'light', 'dark'];
+
+function setMini(value) {
+  mini = Boolean(value);
+  document.body.classList.toggle('mini', mini);
+  $('strip').setAttribute('aria-hidden', String(!mini));
+  $('mini').title = mini ? 'Exit mini mode' : 'Mini mode';
+}
 
 function renderTheme(active) {
   for (const button of $('themePicker').children) {
@@ -22,7 +30,12 @@ function relativeReset(timestamp) {
 }
 
 function renderWindow(key, value) {
-  if (!value) return;
+  const chip = document.querySelector(`.stripChip[data-key="${key}"]`);
+  if (!value) {
+    chip.querySelector('b').textContent = '—';
+    chip.className = 'stripChip';
+    return;
+  }
   const used = value.usedPercent;
   const remaining = Math.max(0, 100 - used);
   $(`${key}Remaining`).textContent = `${remaining}% left`;
@@ -31,18 +44,24 @@ function renderWindow(key, value) {
   bar.style.width = `${remaining}%`;
   bar.className = `bar${remaining <= 10 ? ' danger' : remaining <= 30 ? ' warn' : ''}`;
   $(`${key}Reset`).textContent = relativeReset(value.resetsAt);
+  chip.querySelector('b').textContent = `${remaining}%`;
+  chip.className = `stripChip${remaining <= 10 ? ' danger' : remaining <= 30 ? ' warn' : ''}`;
 }
 
 function render(result) {
   const status = $('status');
+  const dot = $('stripDot');
   if (!result.ok) {
     status.className = 'status error';
+    dot.className = 'stripDot error';
     $('statusText').textContent = result.error || 'Unable to read Codex usage';
     $('updated').textContent = 'Install Codex CLI and sign in with your ChatGPT account.';
+    $('stripReset').textContent = 'No data';
     return;
   }
   const usage = result.usage;
   status.className = usage.source === 'live' ? 'status live' : 'status';
+  dot.className = usage.source === 'live' ? 'stripDot live' : 'stripDot';
   $('statusText').textContent = usage.source === 'live'
     ? (usage.ordinaryUsageAllowed === false ? 'Included usage paused' : 'Live account usage')
     : 'Offline snapshot · may be stale';
@@ -52,6 +71,18 @@ function render(result) {
   $('credits').textContent = usage.credits?.unlimited ? 'Unlimited' : usage.credits?.hasCredits ? (usage.credits.balance || 'Available') : 'None';
   $('resetCredits').textContent = String(usage.resetCredits);
   $('updated').textContent = `Updated ${new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit', second: '2-digit' }).format(usage.fetchedAt)} · ${usage.source === 'live' ? 'live from OpenAI' : 'local Codex cache'}`;
+  const resets = [usage.primary?.resetsAt, usage.secondary?.resetsAt].filter(Boolean).sort((a, b) => a - b);
+  $('stripReset').textContent = shortReset(resets[0]);
+}
+
+function shortReset(timestamp) {
+  if (!timestamp) return '—';
+  const diff = timestamp - Date.now();
+  if (diff <= 0) return 'reset now';
+  const minutes = Math.ceil(diff / 60_000);
+  const days = Math.floor(minutes / 1440);
+  const hours = Math.floor((minutes % 1440) / 60);
+  return days ? `${days}d ${hours}h` : hours ? `${hours}h ${minutes % 60}m` : `${minutes}m`;
 }
 
 async function refresh() {
@@ -62,6 +93,8 @@ async function refresh() {
 }
 
 $('refresh').addEventListener('click', refresh);
+$('mini').addEventListener('click', () => window.codexUsage.setMiniMode(!mini));
+$('expand').addEventListener('click', () => window.codexUsage.setMiniMode(false));
 $('openUsage').addEventListener('click', () => window.codexUsage.openUsage());
 $('alwaysOnTop').addEventListener('change', (event) => window.codexUsage.setAlwaysOnTop(event.target.checked));
 $('openAtLogin').addEventListener('change', (event) => window.codexUsage.setOpenAtLogin(event.target.checked));
@@ -71,9 +104,11 @@ $('themePicker').addEventListener('click', async (event) => {
   renderTheme(await window.codexUsage.setTheme(theme));
 });
 window.codexUsage.onUpdate(render);
+window.codexUsage.onModeUpdate(setMini);
 window.codexUsage.getSettings().then((settings) => {
   $('alwaysOnTop').checked = settings.alwaysOnTop;
   $('openAtLogin').checked = settings.openAtLogin;
+  setMini(settings.mini);
   renderTheme(settings.theme || 'system');
 });
 refresh();
