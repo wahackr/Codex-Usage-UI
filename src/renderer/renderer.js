@@ -1,5 +1,12 @@
 const $ = (id) => document.getElementById(id);
 let refreshing = false;
+const themes = ['system', 'light', 'dark'];
+
+function renderTheme(active) {
+  for (const button of $('themePicker').children) {
+    button.classList.toggle('active', button.dataset.theme === active);
+  }
+}
 
 function relativeReset(timestamp) {
   if (!timestamp) return 'Reset time unavailable';
@@ -58,9 +65,15 @@ $('refresh').addEventListener('click', refresh);
 $('openUsage').addEventListener('click', () => window.codexUsage.openUsage());
 $('alwaysOnTop').addEventListener('change', (event) => window.codexUsage.setAlwaysOnTop(event.target.checked));
 $('openAtLogin').addEventListener('change', (event) => window.codexUsage.setOpenAtLogin(event.target.checked));
+$('themePicker').addEventListener('click', async (event) => {
+  const theme = event.target.dataset.theme;
+  if (!themes.includes(theme)) return;
+  renderTheme(await window.codexUsage.setTheme(theme));
+});
 window.codexUsage.onUpdate(render);
 window.codexUsage.getSettings().then((settings) => {
   $('alwaysOnTop').checked = settings.alwaysOnTop;
   $('openAtLogin').checked = settings.openAtLogin;
+  renderTheme(settings.theme || 'system');
 });
 refresh();

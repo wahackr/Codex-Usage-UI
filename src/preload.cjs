@@ -6,5 +6,6 @@ contextBridge.exposeInMainWorld('codexUsage', {
   getSettings: () => ipcRenderer.invoke('app:getSettings'),
   setAlwaysOnTop: (value) => ipcRenderer.invoke('window:setAlwaysOnTop', value),
   setOpenAtLogin: (value) => ipcRenderer.invoke('app:setLoginItem', value),
+  setTheme: (value) => ipcRenderer.invoke('app:setTheme', value),
   openUsage: () => ipcRenderer.invoke('app:openUsage')
 });

@@ -18,6 +18,10 @@ npm start
 
 The app refreshes every minute and can live in the system tray. Set `CODEX_BIN` to the full Codex executable path if `codex` is not on the GUI application's `PATH`.
 
+## Light and dark mode
+
+The widget follows your OS theme by default. Use the Auto / Light / Dark control in the footer to override it; the choice is remembered between launches. Overriding the theme also affects native window chrome, and the palette swaps instantly with no reload.
+
 ### Linux sandbox setup
 
 Ubuntu may block Chromium's user-namespace sandbox. For a development or unpacked build, configure Electron's sandbox helper once:
