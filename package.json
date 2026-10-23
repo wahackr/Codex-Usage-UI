@@ -1,6 +1,6 @@
 {
   "name": "codex-usage-widget",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Cross-platform desktop widget for ChatGPT plan Codex usage limits",
   "homepage": "https://github.com/wahackr/Codex-Usage-UI",
   "author": {
@@ -9,6 +9,9 @@
   },
   "main": "src/main.cjs",
   "type": "commonjs",
+  "engines": {
+    "node": ">=24.22.1 <25"
+  },
   "scripts": {
     "start": "electron .",
     "generate:icon": "node scripts/generate-tray-icon.cjs",

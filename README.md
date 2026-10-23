@@ -15,10 +15,14 @@ Full widget and mini mode in light and dark themes:
 
 ## Requirements
 
-- Node.js 20 or newer
+- Node.js 24.22.1 or newer within the 24.x release line (for running from source or building installers)
 - Codex CLI installed and signed in with ChatGPT (`codex login`)
 
+Packaged desktop installers include Electron's runtime and do not require a separate Node.js installation.
+
 ## Run locally
+
+With nvm installed, run `nvm install` and `nvm use` to select the version in `.nvmrc`. npm enforces the Node.js requirement during dependency installation.
 
 ```bash
 npm install
@@ -65,7 +69,7 @@ Artifacts are written to `dist/`.
 
 Two GitHub Actions workflows drive the pipeline:
 
-- `.github/workflows/ci.yml` runs the unit tests on `ubuntu-latest` and `windows-latest` for every push to `master` and every pull request.
+- `.github/workflows/ci.yml` runs the unit tests on `ubuntu-24.04` and `windows-latest` for every push to `master` and every pull request.
 - `.github/workflows/release.yml` builds Linux (`AppImage` + `deb`) and Windows (`NSIS setup` + `portable`) on their native runners, then publishes a GitHub Release with the installers attached.
 
 ### Version handling
