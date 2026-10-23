@@ -18,6 +18,10 @@ npm start
 
 The app refreshes every minute and can live in the system tray. Set `CODEX_BIN` to the full Codex executable path if `codex` is not on the GUI application's `PATH`.
 
+Hover over the tray icon to see the remaining 5-hour and weekly allowances. The tooltip updates on automatic and manual refreshes, even while the widget is hidden. Offline snapshots are marked as potentially stale, and missing usage is shown as unavailable.
+
+The tray menu includes Always on top, Light theme, Compact mode, and Open Codex Settings, followed by the usage summary. On Linux, click the icon to open this menu. Ubuntu's GNOME AppIndicator extension does not display hover tooltips; other Linux desktops may support them.
+
 ### Mini mode
 
 A compact, frameless strip about the height of a Chrome tab bar (46px) showing both window percentages, the next reset countdown, and a live/stale indicator. Toggle it with the ▤ button, the tray menu, or the ▢ button in the strip; the strip is draggable. The choice is remembered across restarts.
