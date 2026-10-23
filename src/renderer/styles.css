@@ -97,6 +97,13 @@ body.mini .strip {
   background:linear-gradient(145deg,var(--card-a),var(--card-b)); border-bottom:1px solid var(--line);
   -webkit-app-region:drag; user-select:none;
 }
+/* OpenAI mark from Simple Icons (CC0), bundled for offline use. */
+.stripLogo {
+  width:20px; height:20px; flex-shrink:0; filter:invert(1); pointer-events:none;
+}
+@media (prefers-color-scheme: light) {
+  .stripLogo { filter:none; }
+}
 .stripChip { display:flex; align-items:baseline; gap:5px; }
 .stripChip b { font-size:15px; letter-spacing:-.03em; }
 .stripChip i { color:var(--muted); font-style:normal; font-size:10px; text-transform:uppercase; letter-spacing:.08em; }
