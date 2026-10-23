@@ -4,6 +4,15 @@ A compact desktop widget for the Codex allowance included with a ChatGPT plan. I
 
 The widget asks your locally installed, authenticated Codex CLI for a fresh account-wide usage snapshot. This includes Codex use from other computers. It does not use an API key, scrape browser cookies, or submit an inference prompt.
 
+## Screenshots
+
+Full widget and mini mode in light and dark themes:
+
+| Light | Dark |
+| --- | --- |
+| <img src="docs/screenshots/widget-light.png" alt="Full Codex usage widget in light mode" width="392"> | <img src="docs/screenshots/widget-dark.png" alt="Full Codex usage widget in dark mode" width="392"> |
+| <img src="docs/screenshots/mini-light.png" alt="Mini Codex usage widget in light mode" width="392"> | <img src="docs/screenshots/mini-dark.png" alt="Mini Codex usage widget in dark mode" width="392"> |
+
 ## Requirements
 
 - Node.js 20 or newer
