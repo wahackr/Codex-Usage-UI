@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, Menu, Tray, nativeImage, nativeTheme, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, Menu, Tray, nativeImage, nativeTheme, screen, shell } = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
 const { CodexUsageClient, normalizeUsage, readLocalSnapshot } = require('./codex-client.cjs');
@@ -6,6 +6,7 @@ const { CodexUsageClient, normalizeUsage, readLocalSnapshot } = require('./codex
 let window;
 let tray;
 let refreshTimer;
+let latestUsageResult;
 const client = new CodexUsageClient();
 
 const FULL_SIZE = { width: 390, height: 600 };
@@ -113,14 +114,49 @@ function applyMode() {
   }
 }
 
+function updateTraySettings() {
+  tray?.setContextMenu(trayMenu());
+  window?.webContents.send('settings:update', {
+    alwaysOnTop: window?.isAlwaysOnTop() ?? false,
+    theme: themeSource
+  });
+}
+
+function setAlwaysOnTop(value) {
+  window.setAlwaysOnTop(Boolean(value), 'floating');
+  updateTraySettings();
+  return window.isAlwaysOnTop();
+}
+
+function setTheme(value) {
+  themeSource = themeSources.includes(value) ? value : 'system';
+  saveTheme();
+  applyTheme();
+  updateTraySettings();
+  return themeSource;
+}
+
+function setMiniMode(value) {
+  miniMode = Boolean(value);
+  saveMode();
+  applyMode();
+  updateTraySettings();
+  return miniMode;
+}
+
 function trayMenu() {
+  const usageItems = usageToolTip(latestUsageResult).split('\n').slice(1)
+    .map((label) => ({ label, enabled: false }));
   return Menu.buildFromTemplate([
-    { label: 'Show usage', click: () => { window.show(); window.focus(); } },
-    { label: 'Refresh', click: () => refresh() },
-    { label: miniMode ? 'Exit mini mode' : 'Mini mode', click: () => {
-      miniMode = !miniMode; saveMode(); applyMode();
-      tray.setContextMenu(trayMenu());
-    } },
+    { label: 'Always on top', type: 'checkbox', checked: window?.isAlwaysOnTop() ?? false,
+      click: (item) => setAlwaysOnTop(item.checked) },
+    { label: 'Light theme', type: 'checkbox', checked: !nativeTheme.shouldUseDarkColors,
+      click: (item) => setTheme(item.checked ? 'light' : 'dark') },
+    { label: 'Compact mode', type: 'checkbox', checked: miniMode,
+      click: (item) => setMiniMode(item.checked) },
+    { label: 'Open Codex Settings', click: () => shell.openExternal('https://chatgpt.com/#settings/Usage') },
+    { type: 'separator' },
+    ...usageItems,
     { type: 'separator' },
     { label: 'Quit', click: () => { app.isQuitting = true; app.quit(); } }
   ]);
@@ -132,46 +168,63 @@ function createTray() {
   const icon = nativeImage.createFromPath(path.join(__dirname, 'assets', 'tray.png'));
   if (icon.isEmpty()) console.warn('Tray icon missing: run npm run generate:icon');
   tray = new Tray(icon);
-  tray.setToolTip('Codex Usage Widget');
+  tray.setToolTip(usageToolTip());
   tray.setContextMenu(trayMenu());
   tray.on('click', () => { window.show(); window.focus(); });
 }
 
+function usageToolTip(result) {
+  const lines = ['Codex Usage Widget'];
+  if (!result?.ok || !result.usage) {
+    return [...lines, 'Usage unavailable'].join('\n');
+  }
+  if (result.usage.source === 'local-cache') {
+    lines.push('Offline snapshot — may be stale');
+  }
+  for (const [key, label] of [['primary', '5-hour'], ['secondary', 'Weekly']]) {
+    const used = result.usage[key]?.usedPercent;
+    const remaining = Number.isFinite(used)
+      ? `${100 - Math.round(Math.max(0, Math.min(100, used)))}% left`
+      : 'unavailable';
+    lines.push(`${label}: ${remaining}`);
+  }
+  return lines.join('\n');
+}
+
 async function refresh() {
+  let result;
   try {
     const usage = normalizeUsage(await client.readRateLimits());
-    window?.webContents.send('usage:update', { ok: true, usage });
-    return { ok: true, usage };
+    result = { ok: true, usage };
   } catch (error) {
-    let result;
     try { result = { ok: true, usage: readLocalSnapshot(), warning: error.message }; }
     catch { result = { ok: false, error: error.message }; }
-    window?.webContents.send('usage:update', result);
-    return result;
   }
+  latestUsageResult = result;
+  tray?.setToolTip(usageToolTip(result));
+  // Linux hosts require the context menu to be set again to show updates.
+  tray?.setContextMenu(trayMenu());
+  window?.webContents.send('usage:update', result);
+  return result;
 }
 
 ipcMain.handle('usage:refresh', refresh);
-ipcMain.handle('window:setMiniMode', (_event, value) => {
-  miniMode = Boolean(value);
-  saveMode();
-  applyMode();
-  return miniMode;
+ipcMain.handle('window:fitContent', (_event, height) => {
+  if (!window || miniMode || !Number.isFinite(height) || height <= 0) return;
+  const [width, currentHeight] = window.getContentSize();
+  const frameHeight = window.getSize()[1] - currentHeight;
+  const availableHeight = screen.getDisplayMatching(window.getBounds()).workAreaSize.height - frameHeight;
+  const fittedHeight = Math.min(Math.ceil(height), availableHeight);
+  // Grow to fit content without undoing a user's larger window size.
+  if (fittedHeight > currentHeight) window.setContentSize(width, fittedHeight);
 });
-ipcMain.handle('window:setAlwaysOnTop', (_event, value) => {
-  window.setAlwaysOnTop(Boolean(value), 'floating');
-  return window.isAlwaysOnTop();
-});
+ipcMain.handle('window:setMiniMode', (_event, value) => setMiniMode(value));
+ipcMain.handle('window:setAlwaysOnTop', (_event, value) => setAlwaysOnTop(value));
 ipcMain.handle('app:setLoginItem', (_event, value) => {
   app.setLoginItemSettings({ openAtLogin: Boolean(value) });
   return app.getLoginItemSettings().openAtLogin;
 });
-ipcMain.handle('app:setTheme', (_event, value) => {
-  themeSource = themeSources.includes(value) ? value : 'system';
-  saveTheme();
-  applyTheme();
-  return themeSource;
-});
+ipcMain.handle('app:setTheme', (_event, value) => setTheme(value));
 ipcMain.handle('app:getSettings', () => ({
   alwaysOnTop: window?.isAlwaysOnTop() ?? false,
   openAtLogin: app.getLoginItemSettings().openAtLogin,
@@ -184,7 +237,10 @@ app.whenReady().then(() => {
   loadMode();
   loadTheme();
   applyTheme();
-  nativeTheme.on('updated', () => window?.setBackgroundColor(backgroundForTheme()));
+  nativeTheme.on('updated', () => {
+    window?.setBackgroundColor(backgroundForTheme());
+    updateTraySettings();
+  });
   createWindow();
   createTray();
   refresh();

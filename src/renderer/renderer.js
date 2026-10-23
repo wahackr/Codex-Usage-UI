@@ -3,6 +3,13 @@ let refreshing = false;
 let mini = false;
 const themes = ['system', 'light', 'dark'];
 
+// Measure the natural content height, including padding and wrapped footer
+// text. Watching main avoids a resize loop when the window itself grows.
+const contentObserver = new ResizeObserver(([entry]) => {
+  if (!mini) window.codexUsage.fitContent(entry.target.getBoundingClientRect().height);
+});
+contentObserver.observe(document.querySelector('main'));
+
 function setMini(value) {
   mini = Boolean(value);
   document.body.classList.toggle('mini', mini);
@@ -105,6 +112,10 @@ $('themePicker').addEventListener('click', async (event) => {
 });
 window.codexUsage.onUpdate(render);
 window.codexUsage.onModeUpdate(setMini);
+window.codexUsage.onSettingsUpdate((settings) => {
+  $('alwaysOnTop').checked = settings.alwaysOnTop;
+  renderTheme(settings.theme);
+});
 window.codexUsage.getSettings().then((settings) => {
   $('alwaysOnTop').checked = settings.alwaysOnTop;
   $('openAtLogin').checked = settings.openAtLogin;
