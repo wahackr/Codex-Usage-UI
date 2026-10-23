@@ -2,7 +2,9 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('codexUsage', {
   refresh: () => ipcRenderer.invoke('usage:refresh'),
+  fitContent: (height) => ipcRenderer.invoke('window:fitContent', height),
   onUpdate: (callback) => ipcRenderer.on('usage:update', (_event, value) => callback(value)),
+  onSettingsUpdate: (callback) => ipcRenderer.on('settings:update', (_event, value) => callback(value)),
   getSettings: () => ipcRenderer.invoke('app:getSettings'),
   setAlwaysOnTop: (value) => ipcRenderer.invoke('window:setAlwaysOnTop', value),
   setMiniMode: (value) => ipcRenderer.invoke('window:setMiniMode', value),

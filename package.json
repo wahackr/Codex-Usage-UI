@@ -14,7 +14,7 @@
     "generate:icon": "node scripts/generate-tray-icon.cjs",
     "prestart": "node scripts/generate-tray-icon.cjs",
     "fix:linux-sandbox": "bash scripts/fix-linux-sandbox.sh",
-    "test": "node test/codex-client.test.cjs",
+    "test": "node --test",
     "build": "electron-builder",
     "build:win": "electron-builder --win",
     "build:mac": "electron-builder --mac",
