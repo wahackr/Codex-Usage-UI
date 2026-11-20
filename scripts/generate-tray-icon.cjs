@@ -6,8 +6,19 @@ const zlib = require('node:zlib');
 
 const SIZE = 32;
 const SS = 4; // supersampling factor for anti-aliasing
-const BG = [184, 243, 107]; // #b8f36b lime
 const INK = [23, 32, 20]; // #172014
+
+// The tray icon's background colour encodes how much of the 5-hour window is
+// left (see README); the neutral lime variant is used when usage is unknown.
+const PALETTE = {
+  'tray.png': '#b8f36b',
+  'tray-red.png': '#e5484d',
+  'tray-orange.png': '#f5813c',
+  'tray-yellow.png': '#f0c93a',
+  'tray-green.png': '#3da35b'
+};
+
+const parseHex = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
 
 const CRC_TABLE = (() => {
   const table = new Int32Array(256);
@@ -75,7 +86,7 @@ const sdArcBand = (px, py, r, halfAngle, centerAngle, strokeHalf) => {
   return Math.hypot(px - ex, py - ey) - strokeHalf;
 };
 
-function sample(u, v, edge) {
+function sample(u, v, edge, bg) {
   // u, v in [-1, 1]; rounded-square background
   const bgA = coverage(sdRoundBox(u, v, 0.86, 0.22), edge);
   if (bgA <= 0) return null;
@@ -85,37 +96,43 @@ function sample(u, v, edge) {
   const top = sdArcBand(u, v, ring, Math.PI * 0.42, -Math.PI / 2, strokeHalf);
   const bottom = sdArcBand(u, v, ring, Math.PI * 0.42, Math.PI / 2, strokeHalf);
   const inkA = coverage(Math.min(top, bottom), edge);
-  const r = BG[0] + (INK[0] - BG[0]) * inkA;
-  const g = BG[1] + (INK[1] - BG[1]) * inkA;
-  const b = BG[2] + (INK[2] - BG[2]) * inkA;
+  const r = bg[0] + (INK[0] - bg[0]) * inkA;
+  const g = bg[1] + (INK[1] - bg[1]) * inkA;
+  const b = bg[2] + (INK[2] - bg[2]) * inkA;
   return [r, g, b, bgA];
 }
 
-const rgba = Buffer.alloc(SIZE * SIZE * 4);
-const edge = 1 / SS; // soft edge in supersample units
-for (let y = 0; y < SIZE; y++) {
-  for (let x = 0; x < SIZE; x++) {
-    let r = 0, g = 0, b = 0, a = 0;
-    for (let sy = 0; sy < SS; sy++) {
-      for (let sx = 0; sx < SS; sx++) {
-        const u = ((x + (sx + 0.5) / SS) / SIZE) * 2 - 1;
-        const v = ((y + (sy + 0.5) / SS) / SIZE) * 2 - 1;
-        const s = sample(u, v, edge);
-        if (s) { r += s[0] * s[3]; g += s[1] * s[3]; b += s[2] * s[3]; }
-        a += s ? s[3] : 0;
+function renderRgba(bg) {
+  const rgba = Buffer.alloc(SIZE * SIZE * 4);
+  const edge = 1 / SS; // soft edge in supersample units
+  for (let y = 0; y < SIZE; y++) {
+    for (let x = 0; x < SIZE; x++) {
+      let r = 0, g = 0, b = 0, a = 0;
+      for (let sy = 0; sy < SS; sy++) {
+        for (let sx = 0; sx < SS; sx++) {
+          const u = ((x + (sx + 0.5) / SS) / SIZE) * 2 - 1;
+          const v = ((y + (sy + 0.5) / SS) / SIZE) * 2 - 1;
+          const s = sample(u, v, edge, bg);
+          if (s) { r += s[0] * s[3]; g += s[1] * s[3]; b += s[2] * s[3]; }
+          a += s ? s[3] : 0;
+        }
       }
+      const n = SS * SS;
+      r /= n; g /= n; b /= n; a /= n;
+      const i = (y * SIZE + x) * 4;
+      rgba[i] = a > 0 ? Math.round(r / a) : 0;
+      rgba[i + 1] = a > 0 ? Math.round(g / a) : 0;
+      rgba[i + 2] = a > 0 ? Math.round(b / a) : 0;
+      rgba[i + 3] = Math.round(a * 255);
     }
-    const n = SS * SS;
-    r /= n; g /= n; b /= n; a /= n;
-    const i = (y * SIZE + x) * 4;
-    rgba[i] = a > 0 ? Math.round(r / a) : 0;
-    rgba[i + 1] = a > 0 ? Math.round(g / a) : 0;
-    rgba[i + 2] = a > 0 ? Math.round(b / a) : 0;
-    rgba[i + 3] = Math.round(a * 255);
   }
+  return rgba;
 }
 
-const out = path.join(__dirname, '..', 'src', 'assets', 'tray.png');
-fs.mkdirSync(path.dirname(out), { recursive: true });
-fs.writeFileSync(out, encodePng(SIZE, SIZE, rgba));
-console.log(`Wrote ${out} (${fs.statSync(out).size} bytes)`);
+const dir = path.join(__dirname, '..', 'src', 'assets');
+fs.mkdirSync(dir, { recursive: true });
+for (const [name, hex] of Object.entries(PALETTE)) {
+  const out = path.join(dir, name);
+  fs.writeFileSync(out, encodePng(SIZE, SIZE, renderRgba(parseHex(hex))));
+  console.log(`Wrote ${out} (${fs.statSync(out).size} bytes)`);
+}
