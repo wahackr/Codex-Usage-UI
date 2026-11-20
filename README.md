@@ -15,14 +15,18 @@ Full widget and mini mode in light and dark themes:
 
 ## Requirements
 
-- Node.js 24.22.1 or newer within the 24.x release line (for running from source or building installers)
+- Node.js 24.22.1 or newer (for running from source or building installers)
 - Codex CLI installed and signed in with ChatGPT (`codex login`)
 
 Packaged desktop installers include Electron's runtime and do not require a separate Node.js installation.
 
+Prefer a Node.js release line that receives security patch releases: the October 21, 2026 release fixed the Brotli decoder flaw in 22.23.4, 24.22.1 and 26.12.1, so use a patched 24.x (24.22.1 or newer) or a patched 26.x (26.12.1 or newer). Node 25.x is an odd release line that never receives those fixes.
+
 ## Run locally
 
 With nvm installed, run `nvm install` and `nvm use` to select the version in `.nvmrc`. npm enforces the Node.js requirement during dependency installation.
+
+nvm is only available on macOS and Linux. On Windows, print your version with `node --version`; if it is at least 24.22.1 you can install as is, otherwise pin a supported release with fnm (`fnm use 24.22.1`) or nvm-windows. An `EBADENGINE` error from `npm install` means the version you have is outside the requirement.
 
 ```bash
 npm install
@@ -32,6 +36,17 @@ npm start
 The app refreshes every minute and can live in the system tray. Set `CODEX_BIN` to the full Codex executable path if `codex` is not on the GUI application's `PATH`.
 
 Hover over the tray icon to see the remaining 5-hour and weekly allowances. The tooltip updates on automatic and manual refreshes, even while the widget is hidden. Offline snapshots are marked as potentially stale, and missing usage is shown as unavailable.
+
+The tray icon is tinted by the remaining allowance in the 5-hour window, so its state is visible at a glance without hovering:
+
+| Remaining | Icon colour |
+| --- | --- |
+| under 20% | red |
+| 20% to under 40% | orange |
+| 40% to under 60% | yellow |
+| 60% or more | green |
+
+The weekly window never changes the icon colour, and missing usage keeps the neutral lime icon. The colour follows every refresh, including manual refreshes and while the widget is hidden.
 
 The tray menu includes Always on top, Light theme, Compact mode, and Open Codex Settings, followed by the usage summary. On Linux, click the icon to open this menu. Ubuntu's GNOME AppIndicator extension does not display hover tooltips; other Linux desktops may support them.
 

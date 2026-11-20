@@ -7,7 +7,7 @@ const { normalizeUsage } = require('../src/codex-client.cjs');
 
 function startApp(platform = 'linux') {
   const handlers = new Map();
-  const state = { tooltips: [], updates: [], raw: { rateLimits: {
+  const state = { tooltips: [], updates: [], icons: [], raw: { rateLimits: {
     primary: { usedPercent: 30 }, secondary: { usedPercent: 9 }
   } } };
   const electron = {
@@ -44,9 +44,10 @@ function startApp(platform = 'linux') {
     Tray: class {
       setToolTip(value) { state.tooltips.push(value); }
       setContextMenu(menu) { state.menu = menu; }
+      setImage(image) { state.icons.push(image.name); }
       on() {}
     },
-    nativeImage: { createFromPath: () => ({ isEmpty: () => false }) },
+    nativeImage: { createFromPath: (file) => ({ isEmpty: () => false, name: path.basename(file) }) },
     nativeTheme: {
       shouldUseDarkColors: true,
       set themeSource(value) { this.shouldUseDarkColors = value !== 'light'; },
@@ -133,6 +134,36 @@ test('missing live windows are individually unavailable and replace previous per
   state.raw = { rateLimits: {} };
   await state.tick();
   assert.equal(state.tooltip(), 'Codex Usage Widget\n5-hour: unavailable\nWeekly: unavailable');
+});
+
+test('tray icon tints follow the remaining 5-hour allowance', async () => {
+  const state = startApp();
+  await new Promise(setImmediate);
+  assert.equal(state.icons.at(-1), 'tray-green.png'); // 30% used leaves 70%
+  for (const [used, icon] of [[85, 'tray-red.png'], [65, 'tray-orange.png'], [45, 'tray-yellow.png'], [20, 'tray-green.png']]) {
+    state.raw.rateLimits.primary.usedPercent = used;
+    await state.manualRefresh();
+    assert.equal(state.icons.at(-1), icon);
+  }
+  // Band edges belong to the lighter band: 20% left is orange, 40% yellow, 60% green.
+  for (const [used, icon] of [[100, 'tray-red.png'], [80, 'tray-orange.png'], [60, 'tray-yellow.png'], [40, 'tray-green.png']]) {
+    state.raw.rateLimits.primary.usedPercent = used;
+    await state.tick();
+    assert.equal(state.icons.at(-1), icon);
+  }
+  state.raw.rateLimits.secondary.usedPercent = 100;
+  await state.tick();
+  assert.equal(state.icons.at(-1), 'tray-green.png');
+  state.raw = { rateLimits: { secondary: { usedPercent: 99 } } };
+  await state.manualRefresh();
+  assert.equal(state.icons.at(-1), 'tray.png');
+  state.liveError = true;
+  state.snapshot = { source: 'local-cache', primary: { usedPercent: 91 } };
+  await state.tick();
+  assert.equal(state.icons.at(-1), 'tray-red.png');
+  state.snapshot = null;
+  await state.tick();
+  assert.equal(state.icons.at(-1), 'tray.png');
 });
 
 test('Linux menu exposes the latest usage when hover tooltips are unsupported', async () => {

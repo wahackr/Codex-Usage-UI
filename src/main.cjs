@@ -162,12 +162,44 @@ function trayMenu() {
   ]);
 }
 
+// The tray icon's background colour reports how much of the 5-hour window is
+// left; the weekly window only feeds the tooltip. Bands are half-open, so
+// exactly 20% left is already orange and exactly 60% left is green.
+function usageTint(usage) {
+  const used = usage?.primary?.usedPercent;
+  if (!Number.isFinite(used)) return 'neutral';
+  const remaining = 100 - Math.max(0, Math.min(100, used));
+  if (remaining < 20) return 'red';
+  if (remaining < 40) return 'orange';
+  if (remaining < 60) return 'yellow';
+  return 'green';
+}
+
+const trayIconFiles = { neutral: 'tray.png', red: 'tray-red.png', orange: 'tray-orange.png', yellow: 'tray-yellow.png', green: 'tray-green.png' };
+const trayIcons = new Map();
+
+function loadTrayIcons() {
+  for (const [name, file] of Object.entries(trayIconFiles)) {
+    const image = nativeImage.createFromPath(path.join(__dirname, 'assets', file));
+    if (image.isEmpty()) {
+      // A missing tint falls back to the neutral lime icon; a missing neutral
+      // icon is the pre-existing "run generate:icon" case and still shows.
+      if (name !== 'neutral') continue;
+      console.warn('Tray icon missing: run npm run generate:icon');
+    }
+    trayIcons.set(name, image);
+  }
+}
+
+function trayIconFor(usage) {
+  return trayIcons.get(usageTint(usage)) ?? trayIcons.get('neutral');
+}
+
 function createTray() {
   // nativeImage cannot decode SVG data URLs, which left an empty (invisible)
-  // tray icon that still occupied a slot. Use a real PNG from src/assets.
-  const icon = nativeImage.createFromPath(path.join(__dirname, 'assets', 'tray.png'));
-  if (icon.isEmpty()) console.warn('Tray icon missing: run npm run generate:icon');
-  tray = new Tray(icon);
+  // tray icon that still occupied a slot. Use real PNGs from src/assets.
+  loadTrayIcons();
+  tray = new Tray(trayIconFor());
   tray.setToolTip(usageToolTip());
   tray.setContextMenu(trayMenu());
   tray.on('click', () => { window.show(); window.focus(); });
@@ -201,6 +233,7 @@ async function refresh() {
     catch { result = { ok: false, error: error.message }; }
   }
   latestUsageResult = result;
+  tray?.setImage(trayIconFor(result.usage));
   tray?.setToolTip(usageToolTip(result));
   // Linux hosts require the context menu to be set again to show updates.
   tray?.setContextMenu(trayMenu());
