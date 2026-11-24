@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="CodexUsageWidget.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="Codex Usage">
+  <Grid x:Name="Root">
+    <Rectangle Fill="{ThemeResource BgGlowBrush}" />
+    <TextBlock Text="Codex Usage" Foreground="{ThemeResource InkBrush}" Margin="27" />
+  </Grid>
+</Window>

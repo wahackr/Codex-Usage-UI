@@ -2,3 +2,8 @@ node_modules/
 dist/
 *.log
 .DS_Store
+
+# .NET / WinUI 3 build output
+winui/**/bin/
+winui/**/obj/
+*.user
