@@ -22,4 +22,13 @@
     <ProjectReference Include="..\FakeAppServer\FakeAppServer.csproj" />
   </ItemGroup>
 
+  <!-- The apphost (FakeAppServer / .exe) plus its runtime config must sit
+       next to the test assembly so tests can spawn it as a child process. -->
+  <Target Name="CopyFakeServer" AfterTargets="Build">
+    <ItemGroup>
+      <FakeServerFiles Include="..\FakeAppServer\bin\$(Configuration)\net8.0\FakeAppServer*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(FakeServerFiles)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+  </Target>
+
 </Project>
