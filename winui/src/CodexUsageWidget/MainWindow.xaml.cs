@@ -37,8 +37,11 @@ public sealed partial class MainWindow : Window
         RenderTheme(_themeSource);
         _uiSettings.ColorValuesModeChanged += (_, _) => DispatcherQueue.TryEnqueue(ApplyTheme);
         AppWindow.ResizeClient(new SizeInt32(FullWidth, FullHeight));
+        _miniMode = _settings.LoadMiniMode();
+        ApplyMode();
         PrimaryTrack.SizeChanged += (_, _) => ApplyBarWidths();
         SecondaryTrack.SizeChanged += (_, _) => ApplyBarWidths();
+        Strip.SizeChanged += (_, _) => { if (_miniMode) UpdateDragRegion(); };
         _refreshTimer.Tick += async (_, _) => await RefreshAsync();
         Root.Loaded += OnRootLoaded;
         Closed += (_, _) =>
@@ -50,6 +53,7 @@ public sealed partial class MainWindow : Window
 
     private async void OnRootLoaded(object sender, RoutedEventArgs e)
     {
+        UpdateDragRegion();
         _refresh.Updated += Render;
         _refreshTimer.Start();
         await RefreshAsync();

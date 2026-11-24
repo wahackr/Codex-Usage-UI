@@ -23,7 +23,8 @@
         </StackPanel>
         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
           <Button x:Name="MiniButton" Style="{StaticResource IconButtonStyle}" Content="▤"
-                  ToolTipService.ToolTip="Mini mode" AutomationProperties.Name="Toggle mini mode" />
+                  ToolTipService.ToolTip="Mini mode" AutomationProperties.Name="Toggle mini mode"
+                  Click="OnMiniClick" />
           <Button x:Name="RefreshButton" Style="{StaticResource IconButtonStyle}" Content="↻"
                   ToolTipService.ToolTip="Refresh" AutomationProperties.Name="Refresh"
                   Click="OnRefreshClick" />
@@ -175,7 +176,8 @@
         <Button x:Name="ExpandButton" Grid.Column="5" Width="26" Height="26" Content="▢" FontSize="13"
                 Padding="0" Background="{ThemeResource BtnBrush}" BorderBrush="{ThemeResource LineBrush}"
                 BorderThickness="1" CornerRadius="9" Foreground="{ThemeResource InkBrush}"
-                ToolTipService.ToolTip="Exit mini mode" AutomationProperties.Name="Exit mini mode" />
+                ToolTipService.ToolTip="Exit mini mode" AutomationProperties.Name="Exit mini mode"
+                Click="OnExpandClick" />
       </Grid>
     </Border>
   </Grid>
