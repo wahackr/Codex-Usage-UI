@@ -102,6 +102,84 @@
           </RadialGradientBrush>
         </ResourceDictionary>
       </ResourceDictionary.ThemeDictionaries>
+
+      <!-- State styles use ThemeResource setters so they re-resolve when
+           the palette flips; code-behind swaps Style instead of setting
+           brushes directly, which would freeze the current palette. -->
+      <Style x:Key="DotWarnStyle" TargetType="Ellipse">
+        <Setter Property="Fill" Value="{ThemeResource AmberBrush}" />
+      </Style>
+      <Style x:Key="DotLiveStyle" TargetType="Ellipse">
+        <Setter Property="Fill" Value="{ThemeResource AccentBrush}" />
+      </Style>
+      <Style x:Key="DotErrorStyle" TargetType="Ellipse">
+        <Setter Property="Fill" Value="{ThemeResource RedBrush}" />
+      </Style>
+      <Style x:Key="BarNormalStyle" TargetType="Border">
+        <Setter Property="Background" Value="{ThemeResource AccentBrush}" />
+      </Style>
+      <Style x:Key="BarWarnStyle" TargetType="Border">
+        <Setter Property="Background" Value="{ThemeResource AmberBrush}" />
+      </Style>
+      <Style x:Key="BarDangerStyle" TargetType="Border">
+        <Setter Property="Background" Value="{ThemeResource RedBrush}" />
+      </Style>
+      <Style x:Key="IconButtonStyle" TargetType="Button">
+        <Setter Property="Width" Value="38" />
+        <Setter Property="Height" Value="38" />
+        <Setter Property="Background" Value="{ThemeResource BtnBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource LineBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="12" />
+        <Setter Property="FontSize" Value="22" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Foreground" Value="{ThemeResource InkBrush}" />
+      </Style>
+      <Style x:Key="MeterCardStyle" TargetType="Border">
+        <Setter Property="Background" Value="{ThemeResource CardBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource LineBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="17" />
+        <Setter Property="Padding" Value="17" />
+      </Style>
+      <Style x:Key="PillStyle" TargetType="Border">
+        <Setter Property="Background" Value="{ThemeResource PillBrush}" />
+        <Setter Property="CornerRadius" Value="999" />
+        <Setter Property="Padding" Value="8,5" />
+        <Setter Property="TextBlock.Foreground" Value="{ThemeResource PillInkBrush}" />
+      </Style>
+      <Style x:Key="ChipInkStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{ThemeResource InkBrush}" />
+      </Style>
+      <Style x:Key="ChipWarnStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{ThemeResource AmberBrush}" />
+      </Style>
+      <Style x:Key="ChipDangerStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{ThemeResource RedBrush}" />
+      </Style>
+      <Style x:Key="FooterCheckBoxStyle" TargetType="CheckBox">
+        <Setter Property="Foreground" Value="{ThemeResource ToggleInkBrush}" />
+        <Setter Property="FontSize" Value="11" />
+      </Style>
+      <Style x:Key="ThemePillStyle" TargetType="Button">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="{ThemeResource LineBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="999" />
+        <Setter Property="Padding" Value="11,5" />
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="Foreground" Value="{ThemeResource ToggleInkBrush}" />
+      </Style>
+      <Style x:Key="ThemePillActiveStyle" TargetType="Button" BasedOn="{StaticResource ThemePillStyle}">
+        <Setter Property="Background" Value="{ThemeResource ChipActiveBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource BtnHoverBrush}" />
+        <Setter Property="Foreground" Value="{ThemeResource InkBrush}" />
+      </Style>
+      <Style x:Key="LinkStyle" TargetType="HyperlinkButton">
+        <Setter Property="Foreground" Value="{ThemeResource AccentBrush}" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Padding" Value="0" />
+      </Style>
     </ResourceDictionary>
   </Application.Resources>
 </Application>
