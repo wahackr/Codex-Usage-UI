@@ -12,6 +12,11 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <WindowsPackageType>None</WindowsPackageType>
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <!-- The self-contained Windows App SDK runtime is unpacked from an MSIX
+         for one architecture, and the SDK errors out unless the build names
+         one. A plain `dotnet build` defaults to AnyCPU, so pin the RID the
+         installer ships (same as the publish command in release.yml). -->
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
 
