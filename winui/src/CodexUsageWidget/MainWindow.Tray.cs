@@ -57,6 +57,9 @@ public sealed partial class MainWindow
     public bool SetAlwaysOnTop(bool value)
     {
         if (AppWindow.Presenter is OverlappedPresenter presenter) presenter.IsAlwaysOnTop = value;
+        // The tray menu and the footer checkbox show the same state, as in
+        // updateTraySettings() + the settings broadcast in main.cjs.
+        AlwaysOnTopToggle.IsChecked = IsAlwaysOnTop();
         _tray?.RefreshState();
         return IsAlwaysOnTop();
     }

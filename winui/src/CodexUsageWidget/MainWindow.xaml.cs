@@ -47,6 +47,7 @@ public sealed partial class MainWindow : Window
         _refresh.Updated += result => _tray?.Update(result);
         CreateTray();
         AttachCloseToTray();
+        AttachWindowBehaviors();
         Root.Loaded += OnRootLoaded;
         Closed += (_, _) =>
         {
@@ -62,6 +63,7 @@ public sealed partial class MainWindow : Window
         UpdateDragRegion();
         _refreshTimer.Start();
         await RefreshAsync();
+        FitToContent();
     }
 
     // Auto / Light / Dark override, like nativeTheme.themeSource: Auto
@@ -121,6 +123,7 @@ public sealed partial class MainWindow : Window
             StatusText.Text = string.IsNullOrWhiteSpace(result.Error) ? "Unable to read Codex usage" : result.Error!;
             UpdatedText.Text = "Install Codex CLI and sign in with your ChatGPT account.";
             StripReset.Text = "No data";
+            FitToContent();
             return;
         }
 
@@ -149,6 +152,7 @@ public sealed partial class MainWindow : Window
             .Where(value => value is not null && value > 0)
             .DefaultIfEmpty()
             .Min());
+        FitToContent();
     }
 
     // Ports renderWindow(): the big number, the pill, the bar width and

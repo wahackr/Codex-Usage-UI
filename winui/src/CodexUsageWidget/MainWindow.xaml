@@ -130,8 +130,10 @@
 
       <StackPanel Margin="0,16,0,0">
         <StackPanel Orientation="Horizontal" Spacing="15">
-          <CheckBox x:Name="AlwaysOnTopToggle" Content="Always on top" Style="{StaticResource FooterCheckBoxStyle}" />
-          <CheckBox x:Name="OpenAtLoginToggle" Content="Launch at login" Style="{StaticResource FooterCheckBoxStyle}" />
+          <CheckBox x:Name="AlwaysOnTopToggle" Content="Always on top" Style="{StaticResource FooterCheckBoxStyle}"
+                    Click="OnAlwaysOnTopClick" />
+          <CheckBox x:Name="OpenAtLoginToggle" Content="Launch at login" Style="{StaticResource FooterCheckBoxStyle}"
+                    Click="OnOpenAtLoginClick" />
         </StackPanel>
         <StackPanel x:Name="ThemePicker" Orientation="Horizontal" Spacing="6" Margin="0,14,0,0">
           <Button x:Name="ThemeAutoButton" Tag="system" Content="Auto" Style="{StaticResource ThemePillStyle}" Click="OnThemeClick" />
