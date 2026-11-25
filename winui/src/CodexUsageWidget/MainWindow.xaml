@@ -56,7 +56,8 @@
                            FontSize="25" FontWeight="SemiBold" CharacterSpacing="-40" />
               </StackPanel>
               <Border Grid.Column="1" VerticalAlignment="Top" Style="{StaticResource PillStyle}">
-                <TextBlock x:Name="PrimaryLeft" Text="—" FontSize="11" />
+                <TextBlock x:Name="PrimaryLeft" Text="—" FontSize="11"
+                           Foreground="{ThemeResource PillInkBrush}" />
               </Border>
             </Grid>
             <Border x:Name="PrimaryTrack" Height="8" Margin="0,14,0,8" CornerRadius="99"
@@ -82,7 +83,8 @@
                            FontSize="25" FontWeight="SemiBold" CharacterSpacing="-40" />
               </StackPanel>
               <Border Grid.Column="1" VerticalAlignment="Top" Style="{StaticResource PillStyle}">
-                <TextBlock x:Name="SecondaryLeft" Text="—" FontSize="11" />
+                <TextBlock x:Name="SecondaryLeft" Text="—" FontSize="11"
+                           Foreground="{ThemeResource PillInkBrush}" />
               </Border>
             </Grid>
             <Border x:Name="SecondaryTrack" Height="8" Margin="0,14,0,8" CornerRadius="99"

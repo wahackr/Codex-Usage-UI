@@ -146,7 +146,6 @@
         <Setter Property="Background" Value="{ThemeResource PillBrush}" />
         <Setter Property="CornerRadius" Value="999" />
         <Setter Property="Padding" Value="8,5" />
-        <Setter Property="TextBlock.Foreground" Value="{ThemeResource PillInkBrush}" />
       </Style>
       <Style x:Key="ChipInkStyle" TargetType="TextBlock">
         <Setter Property="Foreground" Value="{ThemeResource InkBrush}" />
