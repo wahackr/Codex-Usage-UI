@@ -6,4 +6,6 @@ dist/
 # .NET / WinUI 3 build output
 winui/**/bin/
 winui/**/obj/
+winui/publish/
+winui/installer/Output/
 *.user

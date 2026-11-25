@@ -16,6 +16,7 @@ concurrency:
 
 env:
   NODE_VERSION: '24.22.1'
+  DOTNET_VERSION: '8.0.x'
 
 jobs:
   test:
@@ -42,3 +43,24 @@ jobs:
 
       - name: Run tests
         run: npm test
+
+  winui:
+    name: WinUI 3 build and tests
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore
+        run: dotnet restore winui/CodexUsageWidget.sln
+
+      # The WinUI app project only compiles on Windows (the XAML compiler is a
+      # Windows executable), so the whole solution builds here instead of Core.
+      - name: Build
+        run: dotnet build winui/CodexUsageWidget.sln -c Release --no-restore
+
+      - name: Run tests
+        run: dotnet test winui/tests/CodexUsageWidget.Tests/CodexUsageWidget.Tests.csproj -c Release --no-build
