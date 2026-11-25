@@ -5,13 +5,13 @@ using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Windows.Graphics;
-using Windows.System;
 using Windows.UI.ViewManagement;
 
 namespace CodexUsageWidget;
 
 // Mirrors src/main.cjs + src/renderer/renderer.js: a 390x600 content-sized
-// widget refreshed every 60 seconds. Mini mode and tray live in later steps.
+// widget refreshed every 60 seconds. The window-mode, tray, and window-behaviour
+// halves live in the companion partials.
 public sealed partial class MainWindow : Window
 {
     public const int FullWidth = 390;
@@ -43,18 +43,23 @@ public sealed partial class MainWindow : Window
         SecondaryTrack.SizeChanged += (_, _) => ApplyBarWidths();
         Strip.SizeChanged += (_, _) => { if (_miniMode) UpdateDragRegion(); };
         _refreshTimer.Tick += async (_, _) => await RefreshAsync();
+        _refresh.Updated += Render;
+        _refresh.Updated += result => _tray?.Update(result);
+        CreateTray();
+        AttachCloseToTray();
         Root.Loaded += OnRootLoaded;
         Closed += (_, _) =>
         {
             _refreshTimer.Stop();
             _refresh.Dispose();
+            _tray?.Dispose();
+            _tray = null;
         };
     }
 
     private async void OnRootLoaded(object sender, RoutedEventArgs e)
     {
         UpdateDragRegion();
-        _refresh.Updated += Render;
         _refreshTimer.Start();
         await RefreshAsync();
     }
@@ -66,6 +71,8 @@ public sealed partial class MainWindow : Window
         _themeSource = theme is "light" or "dark" ? theme : "system";
         _settings.SaveThemeSource(_themeSource);
         ApplyTheme();
+        RenderTheme(_themeSource);
+        _tray?.RefreshState();
         return _themeSource;
     }
 
@@ -95,8 +102,7 @@ public sealed partial class MainWindow : Window
         RenderTheme(SetThemeSource(theme));
     }
 
-    private async void OnOpenUsageClick(object sender, RoutedEventArgs e) =>
-        await Launcher.LaunchUriAsync(new Uri(UsageSettingsUrl));
+    private void OnOpenUsageClick(object sender, RoutedEventArgs e) => OpenUsageSettings();
 
     private void RenderTheme(string active)
     {

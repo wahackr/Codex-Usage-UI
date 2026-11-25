@@ -30,16 +30,19 @@ public sealed partial class MainWindow
         _miniMode = value;
         _settings.SaveMiniMode(_miniMode);
         ApplyMode();
+        _tray?.RefreshState();
         return _miniMode;
     }
 
     private void ApplyMode()
     {
-        if (AppWindow.Presenter is not OverlappedPresenter presenter) return;
-        presenter.SetBorderAndTitleBar(!_miniMode, !_miniMode);
-        presenter.IsResizable = !_miniMode;
-        presenter.IsMaximizable = !_miniMode;
-        presenter.IsShownInSwitchers = !_miniMode;
+        if (AppWindow.Presenter is OverlappedPresenter presenter)
+        {
+            presenter.SetBorderAndTitleBar(!_miniMode, !_miniMode);
+            presenter.IsResizable = !_miniMode;
+            presenter.IsMaximizable = !_miniMode;
+        }
+        AppWindow.IsShownInSwitchers = !_miniMode;
         FullView.Visibility = _miniMode ? Visibility.Collapsed : Visibility.Visible;
         Strip.Visibility = _miniMode ? Visibility.Visible : Visibility.Collapsed;
         MiniButton.ToolTip = _miniMode ? "Exit mini mode" : "Mini mode";
@@ -54,11 +57,11 @@ public sealed partial class MainWindow
         var source = InputNonClientPointerSource.GetForWindowId(AppWindow.Id);
         if (!_miniMode)
         {
-            source.ClearRegionRects(NonClientPointerKind.Caption);
+            source.ClearRegionRects(NonClientRegionKind.Caption);
             return;
         }
         var width = (int)Math.Max(0, Strip.ActualWidth - StripButtonZone);
-        source.SetRegionRects(NonClientPointerKind.Caption, new[] { new RectInt32(0, 0, width, MiniHeight) });
+        source.SetRegionRects(NonClientRegionKind.Caption, new[] { new RectInt32(0, 0, width, MiniHeight) });
     }
 
     private void OnMiniClick(object sender, RoutedEventArgs e) => MiniMode = !_miniMode;

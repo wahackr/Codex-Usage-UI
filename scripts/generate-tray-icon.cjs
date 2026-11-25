@@ -1,22 +1,27 @@
-// Generates src/assets/tray.png (32x32) — Electron's nativeImage cannot decode
-// SVG data URLs, so the tray icon must be a real PNG. Pure Node, no deps.
+// Generates the tray icon set: src/assets/tray*.png (32x32) for Electron,
+// whose nativeImage cannot decode SVG data URLs, and winui/assets/tray-*.ico
+// for the WinUI 3 shell tray icon, which needs a real .ico. Pure Node, no deps.
 const fs = require('node:fs');
 const path = require('node:path');
 const zlib = require('node:zlib');
 
 const SIZE = 32;
+const ICO_SIZES = [16, 32]; // shell icons are shown at 16px on a 100% DPI taskbar
 const SS = 4; // supersampling factor for anti-aliasing
 const INK = [23, 32, 20]; // #172014
 
 // The tray icon's background colour encodes how much of the 5-hour window is
 // left (see README); the neutral lime variant is used when usage is unknown.
 const PALETTE = {
-  'tray.png': '#b8f36b',
-  'tray-red.png': '#e5484d',
-  'tray-orange.png': '#f5813c',
-  'tray-yellow.png': '#f0c93a',
-  'tray-green.png': '#3da35b'
+  neutral: '#b8f36b',
+  red: '#e5484d',
+  orange: '#f5813c',
+  yellow: '#f0c93a',
+  green: '#3da35b'
 };
+
+const pngName = (tint) => `${tint === 'neutral' ? 'tray' : `tray-${tint}`}.png`;
+const icoName = (tint) => `tray-${tint}.ico`;
 
 const parseHex = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
 
@@ -102,16 +107,16 @@ function sample(u, v, edge, bg) {
   return [r, g, b, bgA];
 }
 
-function renderRgba(bg) {
-  const rgba = Buffer.alloc(SIZE * SIZE * 4);
+function renderRgba(bg, size = SIZE) {
+  const rgba = Buffer.alloc(size * size * 4);
   const edge = 1 / SS; // soft edge in supersample units
-  for (let y = 0; y < SIZE; y++) {
-    for (let x = 0; x < SIZE; x++) {
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
       let r = 0, g = 0, b = 0, a = 0;
       for (let sy = 0; sy < SS; sy++) {
         for (let sx = 0; sx < SS; sx++) {
-          const u = ((x + (sx + 0.5) / SS) / SIZE) * 2 - 1;
-          const v = ((y + (sy + 0.5) / SS) / SIZE) * 2 - 1;
+          const u = ((x + (sx + 0.5) / SS) / size) * 2 - 1;
+          const v = ((y + (sy + 0.5) / SS) / size) * 2 - 1;
           const s = sample(u, v, edge, bg);
           if (s) { r += s[0] * s[3]; g += s[1] * s[3]; b += s[2] * s[3]; }
           a += s ? s[3] : 0;
@@ -119,7 +124,7 @@ function renderRgba(bg) {
       }
       const n = SS * SS;
       r /= n; g /= n; b /= n; a /= n;
-      const i = (y * SIZE + x) * 4;
+      const i = (y * size + x) * 4;
       rgba[i] = a > 0 ? Math.round(r / a) : 0;
       rgba[i + 1] = a > 0 ? Math.round(g / a) : 0;
       rgba[i + 2] = a > 0 ? Math.round(b / a) : 0;
@@ -129,10 +134,38 @@ function renderRgba(bg) {
   return rgba;
 }
 
-const dir = path.join(__dirname, '..', 'src', 'assets');
-fs.mkdirSync(dir, { recursive: true });
-for (const [name, hex] of Object.entries(PALETTE)) {
-  const out = path.join(dir, name);
-  fs.writeFileSync(out, encodePng(SIZE, SIZE, renderRgba(parseHex(hex))));
-  console.log(`Wrote ${out} (${fs.statSync(out).size} bytes)`);
+// An .ico container of PNG-encoded frames, which the shell has understood
+// since Vista and which keeps the anti-aliased edges at every tray DPI.
+function encodeIco(frames) {
+  const header = Buffer.alloc(6 + frames.length * 16);
+  header.writeUInt16LE(0, 0); // reserved
+  header.writeUInt16LE(1, 2); // type: icon
+  header.writeUInt16LE(frames.length, 4);
+  let offset = header.length;
+  frames.forEach((frame, index) => {
+    const entry = 6 + index * 16;
+    header[entry] = frame.size >= 256 ? 0 : frame.size;
+    header[entry + 1] = frame.size >= 256 ? 0 : frame.size;
+    header.writeUInt16LE(1, entry + 4); // planes
+    header.writeUInt16LE(32, entry + 6); // bits per pixel
+    header.writeUInt32LE(frame.data.length, entry + 8);
+    header.writeUInt32LE(offset, entry + 12);
+    offset += frame.data.length;
+  });
+  return Buffer.concat([header, ...frames.map((frame) => frame.data)]);
+}
+
+const pngDir = path.join(__dirname, '..', 'src', 'assets');
+const icoDir = path.join(__dirname, '..', 'winui', 'assets');
+fs.mkdirSync(pngDir, { recursive: true });
+fs.mkdirSync(icoDir, { recursive: true });
+for (const [tint, hex] of Object.entries(PALETTE)) {
+  const bg = parseHex(hex);
+  const pngOut = path.join(pngDir, pngName(tint));
+  fs.writeFileSync(pngOut, encodePng(SIZE, SIZE, renderRgba(bg)));
+  console.log(`Wrote ${pngOut} (${fs.statSync(pngOut).size} bytes)`);
+  const icoOut = path.join(icoDir, icoName(tint));
+  const frames = ICO_SIZES.map((size) => ({ size, data: encodePng(size, size, renderRgba(bg, size)) }));
+  fs.writeFileSync(icoOut, encodeIco(frames));
+  console.log(`Wrote ${icoOut} (${fs.statSync(icoOut).size} bytes)`);
 }
