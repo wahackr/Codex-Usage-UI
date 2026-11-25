@@ -66,12 +66,10 @@ jobs:
         run: dotnet test winui/tests/CodexUsageWidget.Tests/CodexUsageWidget.Tests.csproj -c Release --no-build
 
       # MarkupCompilePass2 fails with only "XamlCompiler.exe ... exited with
-      # code 1". The compiler runs out of proc and returns 1 before writing
-      # output.json, so its diagnostics never reach the log (the event log
-      # confirms it is a clean return, not a crash). Pass 1 is clean and every
-      # input pass 2 asks for is on disk, so bisect instead: flip the settings
-      # that change what pass 2 is asked to do, then rebuild copies of the
-      # project with one half of the XAML swapped for a stub.
+      # code 1" and writes no output.json, so its diagnostics never reach the
+      # log. The copy bisect localised it: a stub MainWindow.xaml still fails,
+      # a stub App.xaml gets past pass 2. Rebuild the copy with one construct
+      # at a time removed from App.xaml to find what pass 2 chokes on.
       - name: Bisect the XAML compile failure
         if: failure()
         shell: pwsh
@@ -100,43 +98,36 @@ jobs:
             $base
           }
 
-          $app = 'winui/src/CodexUsageWidget/CodexUsageWidget.csproj'
-          Try-Build 'fingerprint off' $app @('-p:XAMLFingerprint=false')
-          Try-Build 'winappsdk not self-contained' $app @('-p:WindowsAppSDKSelfContained=false')
-
           $full = New-Copy 'probe-full'
           $fullProj = Join-Path $full 'src/CodexUsageWidget/CodexUsageWidget.csproj'
-          Try-Build 'copy: real App.xaml + real MainWindow.xaml' $fullProj
+          Try-Build 'copy: unmodified' $fullProj
 
-          Set-Content (Join-Path $full 'src/CodexUsageWidget/MainWindow.xaml') @'
-          <Window x:Class="CodexUsageWidget.MainWindow"
-                  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                  Title="Codex Usage">
-            <Grid />
-          </Window>
-          '@
-          Set-Content (Join-Path $full 'src/CodexUsageWidget/MainWindow.xaml.cs') @'
-          using Microsoft.UI.Xaml;
-
-          namespace CodexUsageWidget;
-
-          public sealed partial class MainWindow : Window
-          {
-              public MainWindow() => InitializeComponent();
-              public void ShowFromTray() => Activate();
+          $appxaml = Join-Path $full 'src/CodexUsageWidget/App.xaml'
+          $original = Get-Content $appxaml -Raw
+          $variants = [ordered]@{
+            'no TextBlock.Foreground setter' =
+              $original -replace '<Setter Property="TextBlock\.Foreground"[^>]*/>', ''
+            'no RadialGradientBrush' =
+              $original -replace '(?s)<RadialGradientBrush.*?</RadialGradientBrush>', ''
+            'no merged XamlControlsResources' =
+              $original -replace '(?s)<ResourceDictionary\.MergedDictionaries>.*?</ResourceDictionary\.MergedDictionaries>', ''
+            'no ThemeDictionaries' =
+              $original -replace '(?s)<ResourceDictionary\.ThemeDictionaries>.*?</ResourceDictionary\.ThemeDictionaries>', ''
+            'no Styles' =
+              $original -replace '(?s)<Style .*?</Style>', ''
           }
-          '@
-          'Tray', 'WindowMode', 'WindowBehaviors' |
-            ForEach-Object { Remove-Item (Join-Path $full "src/CodexUsageWidget/MainWindow.$_.cs") }
-          Try-Build 'copy: stub MainWindow.xaml' $fullProj
+          foreach ($name in $variants.Keys) {
+            if ($variants[$name] -eq $original) { "==== copy: $name — pattern matched nothing ===="; continue }
+            Set-Content $appxaml $variants[$name]
+            Try-Build "copy: $name" $fullProj
+          }
 
-          $stubApp = New-Copy 'probe-stub-app'
-          Set-Content (Join-Path $stubApp 'src/CodexUsageWidget/App.xaml') @'
+          $stub = New-Copy 'probe-stub-app'
+          Set-Content (Join-Path $stub 'src/CodexUsageWidget/App.xaml') @'
           <Application x:Class="CodexUsageWidget.App"
                        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
             <Application.Resources />
           </Application>
           '@
-          Try-Build 'copy: stub App.xaml' (Join-Path $stubApp 'src/CodexUsageWidget/CodexUsageWidget.csproj')
+          Try-Build 'copy: stub App.xaml' (Join-Path $stub 'src/CodexUsageWidget/CodexUsageWidget.csproj')
