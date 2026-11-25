@@ -54,80 +54,35 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
+      # The Windows App SDK imports its PRI tasks from
+      # $(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\
+      # AppxPackage\, which only exists inside a Visual Studio install. Under a
+      # plain `dotnet build` that path is inside the dotnet SDK and the build
+      # dies with MSB4062 on ExpandPriContent, so restore and build with the
+      # runner's VS MSBuild instead.
+      - uses: microsoft/setup-msbuild@v2
+
       - name: Restore
-        run: dotnet restore winui/CodexUsageWidget.sln
+        run: msbuild winui/CodexUsageWidget.sln -t:restore -nologo -v:minimal
 
       # The WinUI app project only compiles on Windows (the XAML compiler is a
       # Windows executable), so the whole solution builds here instead of Core.
       - name: Build
-        run: dotnet build winui/CodexUsageWidget.sln -c Release --no-restore
+        run: msbuild winui/CodexUsageWidget.sln -p:Configuration=Release -nologo -v:minimal
 
+      # The test project is plain net8.0 (it references Core, not the app), so
+      # it still runs through dotnet test against the msbuild output.
       - name: Run tests
         run: dotnet test winui/tests/CodexUsageWidget.Tests/CodexUsageWidget.Tests.csproj -c Release --no-build
 
-      # MarkupCompilePass2 fails with only "XamlCompiler.exe ... exited with
-      # code 1" and writes no output.json, so its diagnostics never reach the
-      # log. The copy bisect localised it: a stub MainWindow.xaml still fails,
-      # a stub App.xaml gets past pass 2. Rebuild the copy with one construct
-      # at a time removed from App.xaml to find what pass 2 chokes on.
-      - name: Bisect the XAML compile failure
+      - name: Report the AppxPackage task path
         if: failure()
         shell: pwsh
         run: |
-          function Try-Build {
-            param([string]$Label, [string]$Project, [string[]]$Extra = @())
-            "==== $Label ===="
-            $out = @(& dotnet build $Project -c Release --no-restore @Extra 2>&1)
-            "exit: $LASTEXITCODE"
-            $out | Where-Object { "$_" -match 'error|Build succeeded' } |
-              Select-Object -First 12 | ForEach-Object { "  $_" }
+          "dotnet SDKs: $((dotnet --list-sdks) -join '; ')"
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          foreach ($vs in & $vswhere -all -products * -property installationPath) {
+            "VS: $vs"
+            Get-ChildItem "$vs\MSBuild\Microsoft\VisualStudio" -Recurse -ErrorAction SilentlyContinue -Filter 'Microsoft.Build.*.dll' |
+              ForEach-Object { "  $($_.FullName)" }
           }
-
-          # A copy keeps the same relative layout (src/, assets/) so the project
-          # references and the tray-icon Content glob still resolve.
-          function New-Copy {
-            param([string]$Name)
-            $base = Join-Path $env:RUNNER_TEMP $Name
-            Remove-Item -Recurse -Force $base -ErrorAction SilentlyContinue
-            New-Item -ItemType Directory -Path $base | Out-Null
-            Copy-Item -Recurse winui/src (Join-Path $base 'src')
-            Copy-Item -Recurse winui/assets (Join-Path $base 'assets')
-            Get-ChildItem $base -Recurse -Directory |
-              Where-Object { $_.Name -in 'obj', 'bin' } | Remove-Item -Recurse -Force
-            dotnet restore (Join-Path $base 'src/CodexUsageWidget/CodexUsageWidget.csproj') | Out-Null
-            $base
-          }
-
-          $full = New-Copy 'probe-full'
-          $fullProj = Join-Path $full 'src/CodexUsageWidget/CodexUsageWidget.csproj'
-          Try-Build 'copy: unmodified' $fullProj
-
-          $appxaml = Join-Path $full 'src/CodexUsageWidget/App.xaml'
-          $original = Get-Content $appxaml -Raw
-          $variants = [ordered]@{
-            'no TextBlock.Foreground setter' =
-              $original -replace '<Setter Property="TextBlock\.Foreground"[^>]*/>', ''
-            'no RadialGradientBrush' =
-              $original -replace '(?s)<RadialGradientBrush.*?</RadialGradientBrush>', ''
-            'no merged XamlControlsResources' =
-              $original -replace '(?s)<ResourceDictionary\.MergedDictionaries>.*?</ResourceDictionary\.MergedDictionaries>', ''
-            'no ThemeDictionaries' =
-              $original -replace '(?s)<ResourceDictionary\.ThemeDictionaries>.*?</ResourceDictionary\.ThemeDictionaries>', ''
-            'no Styles' =
-              $original -replace '(?s)<Style .*?</Style>', ''
-          }
-          foreach ($name in $variants.Keys) {
-            if ($variants[$name] -eq $original) { "==== copy: $name — pattern matched nothing ===="; continue }
-            Set-Content $appxaml $variants[$name]
-            Try-Build "copy: $name" $fullProj
-          }
-
-          $stub = New-Copy 'probe-stub-app'
-          Set-Content (Join-Path $stub 'src/CodexUsageWidget/App.xaml') @'
-          <Application x:Class="CodexUsageWidget.App"
-                       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-            <Application.Resources />
-          </Application>
-          '@
-          Try-Build 'copy: stub App.xaml' (Join-Path $stub 'src/CodexUsageWidget/CodexUsageWidget.csproj')

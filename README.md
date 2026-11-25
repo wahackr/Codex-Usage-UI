@@ -64,8 +64,11 @@ A compact, frameless strip about the height of a Chrome tab bar (46px) showing b
 `winui/` holds the WinUI 3 (Windows App SDK 1.7) rewrite for Windows 10/11. It is unpackaged and self-contained: no MSIX identity, no bundled browser runtime. Everything the Electron widget does is there — the 60-second refresh, the live read → local snapshot → error chain, mini mode, the tinted tray icon with its tooltip and menu, close-to-tray, single-instance activation, always on top, launch at login, and the Auto / Light / Dark override.
 
 ```powershell
-dotnet build winui/CodexUsageWidget.sln          # Windows only: the XAML compiler is a Windows executable
-dotnet run --project winui/src/CodexUsageWidget  # run the widget
+# Windows only, and only through Visual Studio's MSBuild (a plain `dotnet build`
+# cannot find the Windows App SDK PRI tasks). Open the solution in VS 2022, or:
+msbuild winui/CodexUsageWidget.sln -t:Restore -nologo -v:minimal
+msbuild winui/CodexUsageWidget.sln -p:Configuration=Release -nologo -v:minimal
+winui\src\CodexUsageWidget\bin\Release\net8.0-windows10.0.19041.0\win-x64\CodexUsageWidget.exe
 dotnet test winui/tests/CodexUsageWidget.Tests   # shared logic; runs on any OS
 ```
 
@@ -108,7 +111,9 @@ Artifacts are written to `dist/`.
 The native Windows widget is built separately, on Windows, with Inno Setup installed:
 
 ```powershell
-dotnet publish winui/src/CodexUsageWidget/CodexUsageWidget.csproj -c Release -r win-x64 --self-contained -o winui/publish
+msbuild winui/src/CodexUsageWidget/CodexUsageWidget.csproj -t:Restore -nologo -v:minimal
+msbuild winui/src/CodexUsageWidget/CodexUsageWidget.csproj -t:Publish -p:Configuration=Release `
+  -p:RuntimeIdentifier=win-x64 -p:SelfContained=true -p:PublishDir=$PWD\winui\publish\ -nologo -v:minimal
 & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" winui/installer/setup.iss
 ```
 

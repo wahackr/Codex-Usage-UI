@@ -170,18 +170,29 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
+      # Same reason as the winui job in ci.yml: the Windows App SDK imports its
+      # PRI tasks from a Visual Studio-only path, so `dotnet publish` fails with
+      # MSB4062 and the publish has to run through VS MSBuild.
+      - uses: microsoft/setup-msbuild@v2
+
+      - name: Restore
+        run: msbuild winui/src/CodexUsageWidget/CodexUsageWidget.csproj -t:restore -nologo -v:minimal
+
       - name: Publish self-contained app
-        shell: bash
+        shell: pwsh
         env:
           RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
         run: |
-          dotnet publish winui/src/CodexUsageWidget/CodexUsageWidget.csproj \
-            --configuration Release \
-            --runtime win-x64 \
-            --self-contained \
-            -p:Version="$RELEASE_VERSION" \
-            --output winui/publish
-          ls -la winui/publish | head -20
+          msbuild winui/src/CodexUsageWidget/CodexUsageWidget.csproj `
+            -t:Publish `
+            -p:Configuration=Release `
+            -p:RuntimeIdentifier=win-x64 `
+            -p:SelfContained=true `
+            -p:Version=$env:RELEASE_VERSION `
+            -p:PublishDir=$env:GITHUB_WORKSPACE\winui\publish\ `
+            -nologo -v:minimal
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Get-ChildItem winui/publish | Select-Object -First 20 Name, Length
 
       - name: Install Inno Setup
         run: choco install innosetup --no-progress -y

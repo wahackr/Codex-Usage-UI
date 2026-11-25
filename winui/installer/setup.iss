@@ -1,6 +1,7 @@
 ; Inno Setup script for the unpackaged WinUI 3 widget.
 ; CI runs: iscc //DAppVersion=<version> winui/installer/setup.iss
-; after `dotnet publish -c Release -r win-x64 --self-contained -o winui/publish`.
+; after msbuild -t:Publish -p:Configuration=Release -p:RuntimeIdentifier=win-x64
+; -p:SelfContained=true -p:PublishDir=<repo>\winui\publish\ (VS MSBuild only).
 
 #define AppName "Codex Usage Widget"
 #define AppPublisher "wahackr"
