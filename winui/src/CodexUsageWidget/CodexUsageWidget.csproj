@@ -35,4 +35,15 @@
     <Content Include="..\..\assets\tray-*.ico" Link="Assets\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
+  <!-- The SDK publish list omits the unpackaged app's compiled XAML and PRI.
+       Include them explicitly so publish output can load MainWindow. -->
+  <Target Name="PublishAppXamlResources" AfterTargets="Publish">
+    <ItemGroup>
+      <AppXamlResource Include="$(TargetDir)**\*.xbf;$(TargetDir)$(AssemblyName).pri" />
+    </ItemGroup>
+    <Copy SourceFiles="@(AppXamlResource)"
+          DestinationFiles="@(AppXamlResource->'$(PublishDir)%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+  </Target>
+
 </Project>

@@ -13,7 +13,19 @@ public partial class App : Application
 
     public App()
     {
+        UnhandledException += (_, args) => LogFailure(args.Exception, args.Message);
         InitializeComponent();
+    }
+
+    private static void LogFailure(Exception exception, string message)
+    {
+        try
+        {
+            var directory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "CodexUsageWidget");
+            Directory.CreateDirectory(directory);
+            File.AppendAllText(Path.Combine(directory, "startup-error.log"), $"{DateTimeOffset.Now:O}\n{message}\n{exception}\n\n");
+        }
+        catch { /* Logging must not replace the original failure. */ }
     }
 
     protected override async void OnLaunched(LaunchActivatedEventArgs args)

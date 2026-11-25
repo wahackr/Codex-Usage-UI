@@ -3,8 +3,8 @@
     x:Class="CodexUsageWidget.App"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-  <!-- Native Fluent look: colour comes from the WinUI 3 system resources
-       (SystemBaseColor, SystemSeparator, AccentColor, ...) rather than the
+  <!-- Native Fluent look: colour comes from the WinUI 3 theme brushes
+       (SolidBackgroundFillColorBaseBrush, TextFillColorPrimaryBrush, ...) rather than the
        palette ported from styles.css, so the OS accent and the OS light/dark
        mode drive the whole surface and Root.RequestedTheme still forces Light
        or Dark for the Auto/Light/Dark override. Only the two semantic state
@@ -38,13 +38,13 @@
         <Setter Property="Fill" Value="{ThemeResource WarnBrush}" />
       </Style>
       <Style x:Key="DotLiveStyle" TargetType="Ellipse">
-        <Setter Property="Fill" Value="{ThemeResource AccentColor}" />
+        <Setter Property="Fill" Value="{ThemeResource AccentFillColorDefaultBrush}" />
       </Style>
       <Style x:Key="DotErrorStyle" TargetType="Ellipse">
         <Setter Property="Fill" Value="{ThemeResource DangerBrush}" />
       </Style>
       <Style x:Key="BarNormalStyle" TargetType="Border">
-        <Setter Property="Background" Value="{ThemeResource AccentColor}" />
+        <Setter Property="Background" Value="{ThemeResource AccentFillColorDefaultBrush}" />
       </Style>
       <Style x:Key="BarWarnStyle" TargetType="Border">
         <Setter Property="Background" Value="{ThemeResource WarnBrush}" />
@@ -53,7 +53,7 @@
         <Setter Property="Background" Value="{ThemeResource DangerBrush}" />
       </Style>
       <Style x:Key="ChipInkStyle" TargetType="TextBlock">
-        <Setter Property="Foreground" Value="{ThemeResource SystemPrimaryTextColor}" />
+        <Setter Property="Foreground" Value="{ThemeResource TextFillColorPrimaryBrush}" />
       </Style>
       <Style x:Key="ChipWarnStyle" TargetType="TextBlock">
         <Setter Property="Foreground" Value="{ThemeResource WarnBrush}" />
@@ -64,45 +64,45 @@
       <Style x:Key="IconButtonStyle" TargetType="Button">
         <Setter Property="Width" Value="38" />
         <Setter Property="Height" Value="38" />
-        <Setter Property="Background" Value="{ThemeResource SystemSubtleSurface}" />
-        <Setter Property="BorderBrush" Value="{ThemeResource SystemSeparator}" />
+        <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="8" />
         <Setter Property="Padding" Value="0" />
-        <Setter Property="Foreground" Value="{ThemeResource SystemPrimaryTextColor}" />
+        <Setter Property="Foreground" Value="{ThemeResource TextFillColorPrimaryBrush}" />
       </Style>
       <Style x:Key="MeterCardStyle" TargetType="Border">
-        <Setter Property="Background" Value="{ThemeResource SystemSubtleSurface}" />
-        <Setter Property="BorderBrush" Value="{ThemeResource SystemSeparator}" />
+        <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="10" />
         <Setter Property="Padding" Value="16" />
       </Style>
       <Style x:Key="PillStyle" TargetType="Border">
-        <Setter Property="Background" Value="{ThemeResource SystemSubtleSurface}" />
+        <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
         <Setter Property="CornerRadius" Value="999" />
         <Setter Property="Padding" Value="8,5" />
       </Style>
       <Style x:Key="FooterCheckBoxStyle" TargetType="CheckBox">
-        <Setter Property="Foreground" Value="{ThemeResource SystemBaseTextColor}" />
+        <Setter Property="Foreground" Value="{ThemeResource TextFillColorPrimaryBrush}" />
         <Setter Property="FontSize" Value="12" />
       </Style>
       <Style x:Key="ThemePillStyle" TargetType="Button">
         <Setter Property="Background" Value="Transparent" />
-        <Setter Property="BorderBrush" Value="{ThemeResource SystemSeparator}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="999" />
         <Setter Property="Padding" Value="11,6" />
         <Setter Property="FontSize" Value="12" />
-        <Setter Property="Foreground" Value="{ThemeResource SystemBaseTextColor}" />
+        <Setter Property="Foreground" Value="{ThemeResource TextFillColorPrimaryBrush}" />
       </Style>
       <Style x:Key="ThemePillActiveStyle" TargetType="Button" BasedOn="{StaticResource ThemePillStyle}">
-        <Setter Property="Background" Value="{ThemeResource AccentColor1}" />
-        <Setter Property="BorderBrush" Value="{ThemeResource AccentColor}" />
-        <Setter Property="Foreground" Value="{ThemeResource SystemPrimaryTextColor}" />
+        <Setter Property="Background" Value="{ThemeResource AccentFillColorSecondaryBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource AccentFillColorDefaultBrush}" />
+        <Setter Property="Foreground" Value="{ThemeResource TextFillColorPrimaryBrush}" />
       </Style>
       <Style x:Key="LinkStyle" TargetType="HyperlinkButton">
-        <Setter Property="Foreground" Value="{ThemeResource AccentColor}" />
+        <Setter Property="Foreground" Value="{ThemeResource AccentFillColorDefaultBrush}" />
         <Setter Property="FontSize" Value="12" />
         <Setter Property="Padding" Value="0" />
       </Style>
