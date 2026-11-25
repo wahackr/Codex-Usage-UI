@@ -68,8 +68,9 @@ jobs:
       # MarkupCompilePass2 dies with only "XamlCompiler.exe ... exited with
       # code 1": the compiler runs out of proc, MSBuild aborts on the Exec
       # failure, and the OutputDeserializer that would relay its diagnostics
-      # never runs. Re-run the exe on the pass-2 input.json it left behind so
-      # its own console output and exit code are visible.
+      # never runs. Re-run the exe on the pass-2 input.json it left behind,
+      # show what that input actually asks for, and read the Windows event log
+      # for the unhandled-exception record the crash leaves behind.
       - name: Report XAML compiler diagnostics
         if: failure()
         shell: pwsh
@@ -77,12 +78,25 @@ jobs:
           $project = 'winui/src/CodexUsageWidget'
           $obj = Join-Path (Resolve-Path $project) 'obj/Release/net8.0-windows10.0.19041.0'
           $exe = "$env:USERPROFILE/.nuget/packages/microsoft.windowsappsdk/1.7.260224002/tools/net472/XamlCompiler.exe"
-          "compiler: $(Test-Path $exe); input.json: $((Get-Item "$obj/input.json").Length) bytes"
           $input = Get-Content "$obj/input.json" -Raw | ConvertFrom-Json
-          "input.json properties: $($input.psobject.Properties.Name -join ', ')"
+          '== pass-2 input.json =='
+          foreach ($p in $input.psobject.Properties) {
+            $v = $p.Value
+            if ($v -is [System.Array]) { "$($p.Name): [$($v.Count)] $($v[0..([Math]::Min(2, $v.Count - 1))] -join ' | ')" }
+            else { "$($p.Name): $v" }
+          }
+          '== obj/ contents =='
+          Get-ChildItem $obj -Recurse -File | Sort-Object FullName |
+            ForEach-Object { "{0,10} {1}" -f $_.Length, $_.FullName.Substring($obj.Length + 1) }
+          '== XamlCompiler.exe =='
           & $exe "$obj/input.json" "$obj/diagnostic-output.json" 2>&1 | ForEach-Object { "$_" }
-          "XamlCompiler exit code: $LASTEXITCODE"
+          "exit code: $LASTEXITCODE"
           if (Test-Path "$obj/diagnostic-output.json") {
             '== diagnostic-output.json =='
             Get-Content "$obj/diagnostic-output.json" -Raw
           }
+          '== Application event log =='
+          Get-WinEvent -FilterHashtable @{ LogName = 'Application'; StartTime = (Get-Date).AddMinutes(-10) } `
+            -ErrorAction SilentlyContinue |
+            Where-Object { $_.ProviderName -match '\.NET Runtime|Application Error|Windows Error Reporting' } |
+            ForEach-Object { "--- $($_.TimeCreated) $($_.ProviderName) id=$($_.Id)`n$($_.Message)" }
