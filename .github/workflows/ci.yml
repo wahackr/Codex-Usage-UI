@@ -64,3 +64,19 @@ jobs:
 
       - name: Run tests
         run: dotnet test winui/tests/CodexUsageWidget.Tests/CodexUsageWidget.Tests.csproj -c Release --no-build
+
+      # The out-of-proc XamlCompiler.exe reports failures only as "exited with
+      # code 1"; MSBuild never sees its diagnostics. Re-run the same compile
+      # through the in-proc task so the real XAML errors reach the log.
+      - name: Report XAML compiler diagnostics
+        if: failure()
+        shell: pwsh
+        run: |
+          dotnet build winui/src/CodexUsageWidget/CodexUsageWidget.csproj -c Release --no-restore `
+            -p:UseXamlCompilerExecutable=false
+          dotnet build winui/src/CodexUsageWidget/CodexUsageWidget.csproj -getItem:Page -getItem:ApplicationDefinition
+          $output = 'winui/src/CodexUsageWidget/obj/Release/net8.0-windows10.0.19041.0/output.json'
+          if (Test-Path $output) {
+            '== XamlCompiler output.json =='
+            Get-Content $output -Raw
+          }
