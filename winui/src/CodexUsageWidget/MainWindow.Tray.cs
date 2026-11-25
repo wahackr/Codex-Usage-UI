@@ -16,11 +16,13 @@ public sealed partial class MainWindow
     {
         _tray = new TrayService(WinRT.Interop.WindowNative.GetWindowHandle(this), new TrayActions(
             GetAlwaysOnTop: IsAlwaysOnTop,
-            SetAlwaysOnTop: SetAlwaysOnTop,
+            // Wrapped in lambdas: the setters return the resulting state, and a
+            // method group with a non-void body will not bind to Action<bool>.
+            SetAlwaysOnTop: value => SetAlwaysOnTop(value),
             GetLightTheme: () => Root.ActualTheme != ElementTheme.Dark,
             SetLightTheme: light => SetThemeSource(light ? "light" : "dark"),
             GetMiniMode: () => _miniMode,
-            SetMiniMode: SetMiniMode,
+            SetMiniMode: value => SetMiniMode(value),
             OpenUsage: OpenUsageSettings,
             ShowWindow: ShowFromTray,
             Quit: QuitApp));
