@@ -3,9 +3,13 @@
     x:Class="CodexUsageWidget.App"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-  <!-- Palette ported from src/renderer/styles.css. Dark is the default;
-       the Light dictionary overrides every token, mirroring the CSS
-       prefers-color-scheme block. Root.RequestedTheme selects the set. -->
+  <!-- Native Fluent look: colour comes from the WinUI 3 system resources
+       (SystemBaseColor, SystemSeparator, AccentColor, ...) rather than the
+       palette ported from styles.css, so the OS accent and the OS light/dark
+       mode drive the whole surface and Root.RequestedTheme still forces Light
+       or Dark for the Auto/Light/Dark override. Only the two semantic state
+       colours are hand-picked - the Fluent dictionaries carry no warning or
+       danger token - and they keep a light and dark variant for contrast. -->
   <Application.Resources>
     <ResourceDictionary>
       <ResourceDictionary.MergedDictionaries>
@@ -14,168 +18,91 @@
 
       <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Dark">
-          <SolidColorBrush x:Key="BgBrush" Color="#10120f" />
-          <SolidColorBrush x:Key="CardABrush" Color="#1e221c" />
-          <SolidColorBrush x:Key="CardBBrush" Color="#181b17" />
-          <SolidColorBrush x:Key="LineBrush" Color="#2b3028" />
-          <SolidColorBrush x:Key="InkBrush" Color="#f2f5ec" />
-          <SolidColorBrush x:Key="MutedBrush" Color="#92998c" />
-          <SolidColorBrush x:Key="AccentBrush" Color="#b8f36b" />
-          <SolidColorBrush x:Key="AmberBrush" Color="#ffbf69" />
-          <SolidColorBrush x:Key="RedBrush" Color="#ff716d" />
-          <SolidColorBrush x:Key="BtnBrush" Color="#1c201a" />
-          <SolidColorBrush x:Key="BtnHoverBrush" Color="#4d5747" />
-          <SolidColorBrush x:Key="PillBrush" Color="#282e24" />
-          <SolidColorBrush x:Key="PillInkBrush" Color="#c5cbbb" />
-          <SolidColorBrush x:Key="TrackBrush" Color="#2a2f27" />
-          <SolidColorBrush x:Key="FactBrush" Color="#171a16" />
-          <SolidColorBrush x:Key="ToggleInkBrush" Color="#b8beb2" />
-          <SolidColorBrush x:Key="FooterInkBrush" Color="#6f766a" />
-          <SolidColorBrush x:Key="ChipActiveBrush" Color="#2f3729" />
-          <LinearGradientBrush x:Key="CardBrush" StartPoint="0,0" EndPoint="1,1">
-            <GradientStop Color="#1e221c" Offset="0" />
-            <GradientStop Color="#181b17" Offset="1" />
-          </LinearGradientBrush>
-          <RadialGradientBrush x:Key="BgGlowBrush" GradientOrigin="0.9,0" Center="0.9,0" RadiusX="0.4" RadiusY="0.4">
-            <GradientStop Color="#25311f" Offset="0" />
-            <GradientStop Color="Transparent" Offset="1" />
-          </RadialGradientBrush>
+          <SolidColorBrush x:Key="WarnBrush" Color="#ffbf69" />
+          <SolidColorBrush x:Key="DangerBrush" Color="#ff716d" />
         </ResourceDictionary>
-
         <ResourceDictionary x:Key="Light">
-          <SolidColorBrush x:Key="BgBrush" Color="#f5f7f0" />
-          <SolidColorBrush x:Key="CardABrush" Color="#ffffff" />
-          <SolidColorBrush x:Key="CardBBrush" Color="#eef1e6" />
-          <SolidColorBrush x:Key="LineBrush" Color="#d3dcc6" />
-          <SolidColorBrush x:Key="InkBrush" Color="#171d13" />
-          <SolidColorBrush x:Key="MutedBrush" Color="#656d5b" />
-          <SolidColorBrush x:Key="AccentBrush" Color="#3f7d16" />
-          <SolidColorBrush x:Key="AmberBrush" Color="#a86a10" />
-          <SolidColorBrush x:Key="RedBrush" Color="#c0403b" />
-          <SolidColorBrush x:Key="BtnBrush" Color="#e9eddf" />
-          <SolidColorBrush x:Key="BtnHoverBrush" Color="#b9c4a6" />
-          <SolidColorBrush x:Key="PillBrush" Color="#e4e9d8" />
-          <SolidColorBrush x:Key="PillInkBrush" Color="#4b5342" />
-          <SolidColorBrush x:Key="TrackBrush" Color="#dde3cf" />
-          <SolidColorBrush x:Key="FactBrush" Color="#f0f3e8" />
-          <SolidColorBrush x:Key="ToggleInkBrush" Color="#4b5342" />
-          <SolidColorBrush x:Key="FooterInkBrush" Color="#7c8472" />
-          <SolidColorBrush x:Key="ChipActiveBrush" Color="#dbe4c8" />
-          <LinearGradientBrush x:Key="CardBrush" StartPoint="0,0" EndPoint="1,1">
-            <GradientStop Color="#ffffff" Offset="0" />
-            <GradientStop Color="#eef1e6" Offset="1" />
-          </LinearGradientBrush>
-          <RadialGradientBrush x:Key="BgGlowBrush" GradientOrigin="0.9,0" Center="0.9,0" RadiusX="0.4" RadiusY="0.4">
-            <GradientStop Color="#dfe9cf" Offset="0" />
-            <GradientStop Color="Transparent" Offset="1" />
-          </RadialGradientBrush>
+          <SolidColorBrush x:Key="WarnBrush" Color="#a86a10" />
+          <SolidColorBrush x:Key="DangerBrush" Color="#c0403b" />
         </ResourceDictionary>
-
-        <!-- ElementTheme.Default falls back to this dictionary; the OS theme
-             decides which of Light/Dark is actually applied. -->
         <ResourceDictionary x:Key="Default">
-          <SolidColorBrush x:Key="BgBrush" Color="#10120f" />
-          <SolidColorBrush x:Key="CardABrush" Color="#1e221c" />
-          <SolidColorBrush x:Key="CardBBrush" Color="#181b17" />
-          <SolidColorBrush x:Key="LineBrush" Color="#2b3028" />
-          <SolidColorBrush x:Key="InkBrush" Color="#f2f5ec" />
-          <SolidColorBrush x:Key="MutedBrush" Color="#92998c" />
-          <SolidColorBrush x:Key="AccentBrush" Color="#b8f36b" />
-          <SolidColorBrush x:Key="AmberBrush" Color="#ffbf69" />
-          <SolidColorBrush x:Key="RedBrush" Color="#ff716d" />
-          <SolidColorBrush x:Key="BtnBrush" Color="#1c201a" />
-          <SolidColorBrush x:Key="BtnHoverBrush" Color="#4d5747" />
-          <SolidColorBrush x:Key="PillBrush" Color="#282e24" />
-          <SolidColorBrush x:Key="PillInkBrush" Color="#c5cbbb" />
-          <SolidColorBrush x:Key="TrackBrush" Color="#2a2f27" />
-          <SolidColorBrush x:Key="FactBrush" Color="#171a16" />
-          <SolidColorBrush x:Key="ToggleInkBrush" Color="#b8beb2" />
-          <SolidColorBrush x:Key="FooterInkBrush" Color="#6f766a" />
-          <SolidColorBrush x:Key="ChipActiveBrush" Color="#2f3729" />
-          <LinearGradientBrush x:Key="CardBrush" StartPoint="0,0" EndPoint="1,1">
-            <GradientStop Color="#1e221c" Offset="0" />
-            <GradientStop Color="#181b17" Offset="1" />
-          </LinearGradientBrush>
-          <RadialGradientBrush x:Key="BgGlowBrush" GradientOrigin="0.9,0" Center="0.9,0" RadiusX="0.4" RadiusY="0.4">
-            <GradientStop Color="#25311f" Offset="0" />
-            <GradientStop Color="Transparent" Offset="1" />
-          </RadialGradientBrush>
+          <SolidColorBrush x:Key="WarnBrush" Color="#ffbf69" />
+          <SolidColorBrush x:Key="DangerBrush" Color="#ff716d" />
         </ResourceDictionary>
       </ResourceDictionary.ThemeDictionaries>
 
-      <!-- State styles use ThemeResource setters so they re-resolve when
-           the palette flips; code-behind swaps Style instead of setting
-           brushes directly, which would freeze the current palette. -->
+      <!-- State styles use ThemeResource setters so they re-resolve when the
+           palette flips; code-behind swaps Style instead of setting brushes
+           directly, which would freeze the current palette. -->
       <Style x:Key="DotWarnStyle" TargetType="Ellipse">
-        <Setter Property="Fill" Value="{ThemeResource AmberBrush}" />
+        <Setter Property="Fill" Value="{ThemeResource WarnBrush}" />
       </Style>
       <Style x:Key="DotLiveStyle" TargetType="Ellipse">
-        <Setter Property="Fill" Value="{ThemeResource AccentBrush}" />
+        <Setter Property="Fill" Value="{ThemeResource AccentColor}" />
       </Style>
       <Style x:Key="DotErrorStyle" TargetType="Ellipse">
-        <Setter Property="Fill" Value="{ThemeResource RedBrush}" />
+        <Setter Property="Fill" Value="{ThemeResource DangerBrush}" />
       </Style>
       <Style x:Key="BarNormalStyle" TargetType="Border">
-        <Setter Property="Background" Value="{ThemeResource AccentBrush}" />
+        <Setter Property="Background" Value="{ThemeResource AccentColor}" />
       </Style>
       <Style x:Key="BarWarnStyle" TargetType="Border">
-        <Setter Property="Background" Value="{ThemeResource AmberBrush}" />
+        <Setter Property="Background" Value="{ThemeResource WarnBrush}" />
       </Style>
       <Style x:Key="BarDangerStyle" TargetType="Border">
-        <Setter Property="Background" Value="{ThemeResource RedBrush}" />
+        <Setter Property="Background" Value="{ThemeResource DangerBrush}" />
+      </Style>
+      <Style x:Key="ChipInkStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{ThemeResource SystemTextColor}" />
+      </Style>
+      <Style x:Key="ChipWarnStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{ThemeResource WarnBrush}" />
+      </Style>
+      <Style x:Key="ChipDangerStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{ThemeResource DangerBrush}" />
       </Style>
       <Style x:Key="IconButtonStyle" TargetType="Button">
         <Setter Property="Width" Value="38" />
         <Setter Property="Height" Value="38" />
-        <Setter Property="Background" Value="{ThemeResource BtnBrush}" />
-        <Setter Property="BorderBrush" Value="{ThemeResource LineBrush}" />
+        <Setter Property="Background" Value="{ThemeResource SystemSubtleSurface}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource SystemSeparator}" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="CornerRadius" Value="12" />
-        <Setter Property="FontSize" Value="22" />
+        <Setter Property="CornerRadius" Value="8" />
         <Setter Property="Padding" Value="0" />
-        <Setter Property="Foreground" Value="{ThemeResource InkBrush}" />
+        <Setter Property="Foreground" Value="{ThemeResource SystemTextColor}" />
       </Style>
       <Style x:Key="MeterCardStyle" TargetType="Border">
-        <Setter Property="Background" Value="{ThemeResource CardBrush}" />
-        <Setter Property="BorderBrush" Value="{ThemeResource LineBrush}" />
+        <Setter Property="Background" Value="{ThemeResource SystemSubtleSurface}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource SystemSeparator}" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="CornerRadius" Value="17" />
-        <Setter Property="Padding" Value="17" />
+        <Setter Property="CornerRadius" Value="10" />
+        <Setter Property="Padding" Value="16" />
       </Style>
       <Style x:Key="PillStyle" TargetType="Border">
-        <Setter Property="Background" Value="{ThemeResource PillBrush}" />
+        <Setter Property="Background" Value="{ThemeResource SystemSubtleSurface}" />
         <Setter Property="CornerRadius" Value="999" />
         <Setter Property="Padding" Value="8,5" />
       </Style>
-      <Style x:Key="ChipInkStyle" TargetType="TextBlock">
-        <Setter Property="Foreground" Value="{ThemeResource InkBrush}" />
-      </Style>
-      <Style x:Key="ChipWarnStyle" TargetType="TextBlock">
-        <Setter Property="Foreground" Value="{ThemeResource AmberBrush}" />
-      </Style>
-      <Style x:Key="ChipDangerStyle" TargetType="TextBlock">
-        <Setter Property="Foreground" Value="{ThemeResource RedBrush}" />
-      </Style>
       <Style x:Key="FooterCheckBoxStyle" TargetType="CheckBox">
-        <Setter Property="Foreground" Value="{ThemeResource ToggleInkBrush}" />
-        <Setter Property="FontSize" Value="11" />
+        <Setter Property="Foreground" Value="{ThemeResource SystemBaseTextColor}" />
+        <Setter Property="FontSize" Value="12" />
       </Style>
       <Style x:Key="ThemePillStyle" TargetType="Button">
         <Setter Property="Background" Value="Transparent" />
-        <Setter Property="BorderBrush" Value="{ThemeResource LineBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource SystemSeparator}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="999" />
-        <Setter Property="Padding" Value="11,5" />
-        <Setter Property="FontSize" Value="11" />
-        <Setter Property="Foreground" Value="{ThemeResource ToggleInkBrush}" />
+        <Setter Property="Padding" Value="11,6" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Foreground" Value="{ThemeResource SystemBaseTextColor}" />
       </Style>
       <Style x:Key="ThemePillActiveStyle" TargetType="Button" BasedOn="{StaticResource ThemePillStyle}">
-        <Setter Property="Background" Value="{ThemeResource ChipActiveBrush}" />
-        <Setter Property="BorderBrush" Value="{ThemeResource BtnHoverBrush}" />
-        <Setter Property="Foreground" Value="{ThemeResource InkBrush}" />
+        <Setter Property="Background" Value="{ThemeResource AccentColor1}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource AccentColor}" />
+        <Setter Property="Foreground" Value="{ThemeResource SystemTextColor}" />
       </Style>
       <Style x:Key="LinkStyle" TargetType="HyperlinkButton">
-        <Setter Property="Foreground" Value="{ThemeResource AccentBrush}" />
+        <Setter Property="Foreground" Value="{ThemeResource AccentColor}" />
         <Setter Property="FontSize" Value="12" />
         <Setter Property="Padding" Value="0" />
       </Style>
