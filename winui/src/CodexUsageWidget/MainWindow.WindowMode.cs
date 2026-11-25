@@ -1,6 +1,7 @@
 using Microsoft.UI.Input;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using Windows.Graphics;
 
 namespace CodexUsageWidget;
@@ -45,7 +46,8 @@ public sealed partial class MainWindow
         AppWindow.IsShownInSwitchers = !_miniMode;
         FullView.Visibility = _miniMode ? Visibility.Collapsed : Visibility.Visible;
         Strip.Visibility = _miniMode ? Visibility.Visible : Visibility.Collapsed;
-        MiniButton.ToolTip = _miniMode ? "Exit mini mode" : "Mini mode";
+        // ToolTip is an attached property in WinUI, not a member of Button.
+        ToolTipService.SetToolTip(MiniButton, _miniMode ? "Exit mini mode" : "Mini mode");
         AppWindow.ResizeClient(new SizeInt32(_miniMode ? MiniWidth : FullWidth, _miniMode ? MiniHeight : FullHeight));
         UpdateDragRegion();
     }

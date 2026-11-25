@@ -35,7 +35,7 @@ public sealed partial class MainWindow : Window
         _themeSource = _settings.LoadThemeSource();
         ApplyTheme();
         RenderTheme(_themeSource);
-        _uiSettings.ColorValuesModeChanged += (_, _) => DispatcherQueue.TryEnqueue(ApplyTheme);
+        _uiSettings.ColorValuesChanged += (_, _) => DispatcherQueue.TryEnqueue(ApplyTheme);
         AppWindow.ResizeClient(new SizeInt32(FullWidth, FullHeight));
         _miniMode = _settings.LoadMiniMode();
         ApplyMode();

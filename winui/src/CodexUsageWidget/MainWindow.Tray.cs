@@ -1,5 +1,6 @@
 using CodexUsageWidget.Services;
 using Microsoft.UI.Windowing;
+using Microsoft.UI.Xaml;
 using Windows.System;
 
 namespace CodexUsageWidget;

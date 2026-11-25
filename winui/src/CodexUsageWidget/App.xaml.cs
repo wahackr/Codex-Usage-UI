@@ -25,7 +25,10 @@ public partial class App : Application
             await instance.RedirectActivationToAsync(AppInstance.GetCurrent().GetActivatedEventArgs());
             return;
         }
-        AppInstance.GetCurrent().Activated += (_, _) => DispatcherQueue.TryEnqueue(() => _window?.ShowFromTray());
+        // Application has no DispatcherQueue of its own; OnLaunched runs on the
+        // UI thread, so the thread's queue is the right one.
+        AppInstance.GetCurrent().Activated += (_, _) =>
+            DispatcherQueue.GetForCurrentThread()?.TryEnqueue(() => _window?.ShowFromTray());
         _window = new MainWindow();
         _window.Activate();
     }
