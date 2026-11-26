@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [master, development]
   workflow_dispatch:
+    inputs:
+      package_windows:
+        description: 'Build downloadable WinUI installer and portable ZIP'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -86,3 +91,59 @@ jobs:
             Get-ChildItem "$vs\MSBuild\Microsoft\VisualStudio" -Recurse -ErrorAction SilentlyContinue -Filter 'Microsoft.Build.*.dll' |
               ForEach-Object { "  $($_.FullName)" }
           }
+
+  package-winui:
+    if: github.event_name == 'workflow_dispatch' && inputs.package_windows
+    name: Package WinUI widget
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - uses: microsoft/setup-msbuild@v2
+
+      - name: Resolve version
+        shell: pwsh
+        run: |
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          "APP_VERSION=$version" >> $env:GITHUB_ENV
+
+      - name: Restore
+        run: msbuild winui/src/CodexUsageWidget/CodexUsageWidget.csproj -t:restore -p:Configuration=Release -p:RuntimeIdentifier=win-x64 -p:SelfContained=true -nologo -v:minimal
+
+      - name: Publish self-contained app
+        shell: pwsh
+        run: |
+          msbuild winui/src/CodexUsageWidget/CodexUsageWidget.csproj `
+            -t:Publish `
+            -p:Configuration=Release `
+            -p:RuntimeIdentifier=win-x64 `
+            -p:SelfContained=true `
+            -p:Version=$env:APP_VERSION `
+            -p:PublishDir=$env:GITHUB_WORKSPACE\winui\publish\ `
+            -nologo -v:minimal
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Package installer and portable app
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (!(Test-Path $iscc)) {
+            choco install innosetup --no-progress -y
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+          & $iscc "/DAppVersion=$env:APP_VERSION" winui/installer/setup.iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          New-Item -ItemType Directory -Path artifacts -Force | Out-Null
+          Copy-Item winui/installer/Output/*.exe artifacts/
+          Compress-Archive -Path winui/publish/* -DestinationPath "artifacts/CodexUsageWidget-$env:APP_VERSION-win-x64-portable.zip"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: winui-windows-binaries
+          path: artifacts/*
+          if-no-files-found: error
+          retention-days: 30

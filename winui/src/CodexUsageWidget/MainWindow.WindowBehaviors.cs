@@ -12,14 +12,20 @@ public sealed partial class MainWindow
 {
     private readonly StartupTask _startup = new();
     private bool _fitting;
+    private bool _syncingSettings;
 
     private void AttachWindowBehaviors()
     {
         // Mirrors the renderer's ResizeObserver on <main>: the content drives
         // the window height, and the window never shrinks below what it has.
         FullView.SizeChanged += (_, _) => FitToContent();
-        AlwaysOnTopToggle.IsChecked = IsAlwaysOnTop();
-        OpenAtLoginToggle.IsChecked = _startup.IsEnabled();
+        _syncingSettings = true;
+        try
+        {
+            AlwaysOnTopToggle.IsOn = IsAlwaysOnTop();
+            OpenAtLoginToggle.IsOn = _startup.IsEnabled();
+        }
+        finally { _syncingSettings = false; }
     }
 
     // Ports ipcMain.handle('window:fitContent'): measure the natural content
@@ -52,9 +58,18 @@ public sealed partial class MainWindow
         }
     }
 
-    private void OnAlwaysOnTopClick(object sender, RoutedEventArgs e) => SetAlwaysOnTop(AlwaysOnTopToggle.IsChecked == true);
+    private void OnAlwaysOnTopClick(object sender, RoutedEventArgs e)
+    {
+        if (!_syncingSettings && AlwaysOnTopToggle.IsOn != IsAlwaysOnTop())
+            SetAlwaysOnTop(AlwaysOnTopToggle.IsOn);
+    }
 
-    // The checkbox follows whatever the registry ended up holding.
-    private void OnOpenAtLoginClick(object sender, RoutedEventArgs e) =>
-        OpenAtLoginToggle.IsChecked = _startup.SetEnabled(OpenAtLoginToggle.IsChecked == true);
+    // The switch follows whatever the registry ended up holding.
+    private void OnOpenAtLoginClick(object sender, RoutedEventArgs e)
+    {
+        if (_syncingSettings) return;
+        _syncingSettings = true;
+        try { OpenAtLoginToggle.IsOn = _startup.SetEnabled(OpenAtLoginToggle.IsOn); }
+        finally { _syncingSettings = false; }
+    }
 }
