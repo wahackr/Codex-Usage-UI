@@ -86,6 +86,17 @@ public sealed partial class MainWindow : Window
             "dark" => ElementTheme.Dark,
             _ => ElementTheme.Default,
         };
+        var dark = Root.RequestedTheme == ElementTheme.Dark
+            || (_themeSource == "system" && IsSystemDark());
+        StripLogo.Source = dark ? "Assets/openai-white.svg" : "Assets/openai.svg";
+    }
+
+    private bool IsSystemDark()
+    {
+        var color = _uiSettings.UIElementColor(UIElementType.WindowText);
+        // WindowText is light in dark mode and dark in light mode; use luminance.
+        var luminance = 0.2126 * color.R + 0.7152 * color.G + 0.0722 * color.B;
+        return luminance > 128;
     }
 
     private async Task RefreshAsync()
