@@ -5,7 +5,6 @@ using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Windows.Graphics;
-using Windows.UI.ViewManagement;
 
 namespace CodexUsageWidget;
 
@@ -21,7 +20,6 @@ public sealed partial class MainWindow : Window
 
     private readonly SettingsStore _settings = new(Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "CodexUsageWidget"));
-    private readonly UISettings _uiSettings = new();
     private readonly RefreshService _refresh = new();
     private readonly DispatcherTimer _refreshTimer = new() { Interval = TimeSpan.FromMinutes(1) };
     private string _themeSource = "system";
@@ -35,7 +33,6 @@ public sealed partial class MainWindow : Window
         _themeSource = _settings.LoadThemeSource();
         ApplyTheme();
         RenderTheme(_themeSource);
-        _uiSettings.ColorValuesChanged += (_, _) => DispatcherQueue.TryEnqueue(ApplyTheme);
         AppWindow.ResizeClient(new SizeInt32(FullWidth, FullHeight));
         _miniMode = _settings.LoadMiniMode();
         ApplyMode();
@@ -78,6 +75,9 @@ public sealed partial class MainWindow : Window
         return _themeSource;
     }
 
+    // The strip logo fills TextFillColorPrimaryBrush, which the Fluent theme
+    // resolves to near-black in light mode and white in dark mode - the same
+    // swap the two SVG assets used to encode, now handled by the theme itself.
     private void ApplyTheme()
     {
         Root.RequestedTheme = _themeSource switch

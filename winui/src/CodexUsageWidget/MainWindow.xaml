@@ -3,6 +3,7 @@
     x:Class="CodexUsageWidget.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:Microsoft.UI.Xaml.Controls"
     Title="Codex Usage">
   <!-- Layout ported from src/renderer/index.html + styles.css. The strip is
        the mini-mode row; it stays collapsed until mini mode is switched on.
@@ -177,8 +178,15 @@
           <ColumnDefinition Width="Auto" />
           <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
-        <PathIcon Width="20" Height="20" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorPrimaryBrush}"
-                  AutomationProperties.Name="OpenAI" Data="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z" />
+        <!-- The 1.7 Windows App SDK this app pins has no SvgImage control (CS0234
+             on the generated MainWindow.g.i.cs), so the OpenAI mark is inlined as
+             PathIcon geometry ported from the OpenAI SVG mark (24x24 design grid,
+             same as the other glyphs here). Foreground tracks TextFillColorPrimary
+             Brush, near-black in light mode and white in dark mode - the same
+             light/dark swap the two SVG assets used to encode. -->
+        <PathIcon x:Name="StripLogo" Width="20" Height="20" VerticalAlignment="Center"
+                  Foreground="{ThemeResource TextFillColorPrimaryBrush}" AutomationProperties.Name="OpenAI"
+                  Data="M22.2819 9.8211 A5.9847 5.9847 0 0 0 21.7662 4.9103 A6.0462 6.0462 0 0 0 15.2564 2.0103 A6.0651 6.0651 0 0 0 4.9807 4.1818 A5.9847 5.9847 0 0 0 0.983 7.0818 A6.0462 6.0462 0 0 0 1.7257 14.1784 A5.98 5.98 0 0 0 2.2367 19.0891 A6.051 6.051 0 0 0 8.7513 21.9892 A5.9847 5.9847 0 0 0 13.2599 24 A6.0557 6.0557 0 0 0 19.0317 19.7942 A5.9894 5.9894 0 0 0 23.0294 16.8941 A6.0557 6.0557 0 0 0 22.2819 9.8212 Z M13.2599 22.4293 A4.4755 4.4755 0 0 1 10.3835 21.3885 L10.5254 21.3081 L15.3037 18.5499 A0.7948 0.7948 0 0 0 15.6964 17.8686 V11.1317 L17.7164 12.3003 A0.071 0.071 0 0 1 17.7544 12.3523 V17.9349 A4.504 4.504 0 0 1 13.2599 22.4293 Z M3.5992 18.3039 A4.4708 4.4708 0 0 1 3.0646 15.2902 L3.2066 15.3754 L7.9896 18.1336 A0.7712 0.7712 0 0 0 8.7702 18.1336 L14.613 14.7651 V17.0975 A0.0804 0.0804 0 0 1 14.5798 17.159 L9.74 19.9502 A4.4992 4.4992 0 0 1 3.5992 18.3038 Z M2.3408 7.8956 A4.485 4.485 0 0 1 4.7063 5.9228 V11.6 A0.7664 0.7664 0 0 0 5.0942 12.2765 L10.9086 15.6308 L8.8885 16.7993 A0.0757 0.0757 0 0 1 8.8175 16.7993 L3.9872 14.0128 A4.504 4.504 0 0 1 2.3408 7.872 Z M18.9371 11.7278 L13.1038 8.364 L15.1192 7.2 A0.0757 0.0757 0 0 1 15.1902 7.2 L20.0205 9.9913 A4.4944 4.4944 0 0 1 19.344 18.0955 V12.4183 A0.79 0.79 0 0 0 18.937 11.7513 Z M20.9477 8.7282 L20.8057 8.643 L16.0322 5.8612 A0.7759 0.7759 0 0 0 15.2468 5.8612 L9.409 9.2297 V6.8974 A0.0662 0.0662 0 0 1 9.4374 6.8359 L14.2677 4.0493 A4.4992 4.4992 0 0 1 20.9479 8.7093 Z M8.3065 12.863 L6.2865 11.6992 A0.0804 0.0804 0 0 1 6.2485 11.6425 V6.0742 A4.4992 4.4992 0 0 1 13.6242 2.6205 L13.4822 2.701 L8.704 5.459 A0.7948 0.7948 0 0 0 8.3113 6.1403 Z M9.4089 3.7749 L12.0109 2.2751 L14.6178 3.7749 V6.7743 L12.0204 8.274 L9.4137 6.7743 Z" />
         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
           <TextBlock x:Name="StripPrimary" Text="—" Foreground="{ThemeResource TextFillColorPrimaryBrush}"
                      FontSize="15" FontWeight="SemiBold" CharacterSpacing="-30" />
@@ -193,7 +201,7 @@
                    FontSize="11" HorizontalAlignment="Right" VerticalAlignment="Center" />
         <Ellipse x:Name="StripDot" Grid.Column="4" Width="7" Height="7"
                  VerticalAlignment="Center" Style="{StaticResource DotWarnStyle}" />
-        <!-- Square frame drawn as four bars: PathIcon has no FillRule, so no holes. -->
+        <!-- Four corner brackets: an "expand" glyph (exit mini mode). -->
         <Button x:Name="ExpandButton" Grid.Column="5" Width="26" Height="26" Padding="0"
                 Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                 BorderThickness="1" CornerRadius="8"
@@ -201,7 +209,7 @@
                 Click="OnExpandClick">
           <PathIcon Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center"
                     Foreground="{ThemeResource TextFillColorPrimaryBrush}"
-                    Data="M3 3 H21 V7 H3 Z M3 7 H7 V21 H3 Z M17 7 H21 V21 H17 Z M3 17 H21 V21 H3 Z" />
+                    Data="M4 4 H9 V6 H6 V9 H4 Z M20 4 H15 V6 H18 V9 H20 Z M4 20 H9 V18 H6 V15 H4 Z M20 20 H15 V18 H18 V15 H20 Z" />
         </Button>
       </Grid>
     </Border>
