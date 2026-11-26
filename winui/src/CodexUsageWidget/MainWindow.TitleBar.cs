@@ -1,0 +1,32 @@
+using System.Runtime.InteropServices;
+using Microsoft.UI.Xaml;
+
+namespace CodexUsageWidget;
+
+// The min/max/close caption is drawn by DWM, and WinUI 3's RequestedTheme
+// never reaches it: an unpackaged app that forces Dark still gets the light
+// caption strip. The documented switch is DWMWA_USE_IMMERSIVE_DARK_MODE
+// (attribute 20; the pre-2004 builds used 19), so we flip it ourselves from
+// the root element's resolved theme.
+public sealed partial class MainWindow
+{
+    private const int DwmwaUseImmersiveDarkMode = 20;
+    private const int DwmwaUseImmersiveDarkModeBefore20 = 19;
+
+    [DllImport("dwmapi.dll", PreserveSig = true)]
+    private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int value, int size);
+
+    // Called after every ApplyTheme() (ActualTheme may have flipped) and after
+    // SetBorderAndTitleBar(true, ...) rebuilds the caption on expand. Harmless
+    // in mini mode, where the window is borderless and has no caption.
+    private void ApplyTitleBarTheme()
+    {
+        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
+        if (hwnd == IntPtr.Zero) return;
+        var dark = Root.ActualTheme == ElementTheme.Dark ? 1 : 0;
+        if (DwmSetWindowAttribute(hwnd, DwmwaUseImmersiveDarkMode, ref dark, sizeof(int)) != 0)
+        {
+            DwmSetWindowAttribute(hwnd, DwmwaUseImmersiveDarkModeBefore20, ref dark, sizeof(int));
+        }
+    }
+}
