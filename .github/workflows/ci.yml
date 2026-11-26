@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [master]
+    branches: [master, development]
   pull_request:
-    branches: [master]
+    branches: [master, development]
   workflow_dispatch:
 
 permissions:
@@ -16,6 +16,7 @@ concurrency:
 
 env:
   NODE_VERSION: '24.22.1'
+  DOTNET_VERSION: '8.0.x'
 
 jobs:
   test:
@@ -42,3 +43,46 @@ jobs:
 
       - name: Run tests
         run: npm test
+
+  winui:
+    name: WinUI 3 build and tests
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      # The Windows App SDK imports its PRI tasks from
+      # $(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\
+      # AppxPackage\, which only exists inside a Visual Studio install. Under a
+      # plain `dotnet build` that path is inside the dotnet SDK and the build
+      # dies with MSB4062 on ExpandPriContent, so restore and build with the
+      # runner's VS MSBuild instead.
+      - uses: microsoft/setup-msbuild@v2
+
+      - name: Restore
+        run: msbuild winui/CodexUsageWidget.sln -t:restore -nologo -v:minimal
+
+      # The WinUI app project only compiles on Windows (the XAML compiler is a
+      # Windows executable), so the whole solution builds here instead of Core.
+      - name: Build
+        run: msbuild winui/CodexUsageWidget.sln -p:Configuration=Release -nologo -v:minimal
+
+      # The test project is plain net8.0 (it references Core, not the app), so
+      # it still runs through dotnet test against the msbuild output.
+      - name: Run tests
+        run: dotnet test winui/tests/CodexUsageWidget.Tests/CodexUsageWidget.Tests.csproj -c Release --no-build
+
+      - name: Report the AppxPackage task path
+        if: failure()
+        shell: pwsh
+        run: |
+          "dotnet SDKs: $((dotnet --list-sdks) -join '; ')"
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          foreach ($vs in & $vswhere -all -products * -property installationPath) {
+            "VS: $vs"
+            Get-ChildItem "$vs\MSBuild\Microsoft\VisualStudio" -Recurse -ErrorAction SilentlyContinue -Filter 'Microsoft.Build.*.dll' |
+              ForEach-Object { "  $($_.FullName)" }
+          }

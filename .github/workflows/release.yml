@@ -28,6 +28,7 @@ concurrency:
 
 env:
   NODE_VERSION: '24.22.1'
+  DOTNET_VERSION: '8.0.x'
 
 jobs:
   prepare:
@@ -158,10 +159,69 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
+  build-winui:
+    name: Build Windows widget (WinUI 3)
+    runs-on: windows-latest
+    needs: prepare
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      # Same reason as the winui job in ci.yml: the Windows App SDK imports its
+      # PRI tasks from a Visual Studio-only path, so `dotnet publish` fails with
+      # MSB4062 and the publish has to run through VS MSBuild.
+      - uses: microsoft/setup-msbuild@v2
+
+      - name: Restore
+        run: msbuild winui/src/CodexUsageWidget/CodexUsageWidget.csproj -t:restore -nologo -v:minimal
+
+      - name: Publish self-contained app
+        shell: pwsh
+        env:
+          RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          msbuild winui/src/CodexUsageWidget/CodexUsageWidget.csproj `
+            -t:Publish `
+            -p:Configuration=Release `
+            -p:RuntimeIdentifier=win-x64 `
+            -p:SelfContained=true `
+            -p:Version=$env:RELEASE_VERSION `
+            -p:PublishDir=$env:GITHUB_WORKSPACE\winui\publish\ `
+            -nologo -v:minimal
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Get-ChildItem winui/publish | Select-Object -First 20 Name, Length
+
+      - name: Install Inno Setup
+        run: choco install innosetup --no-progress -y
+
+      - name: Build installer
+        shell: bash
+        env:
+          RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          iscc="/c/Program Files (x86)/Inno Setup 6/ISCC.exe"
+          if [ ! -x "$iscc" ]; then
+            echo "::error::ISCC.exe was not found after installing innosetup"
+            find "/c/Program Files (x86)" -maxdepth 2 -name 'ISCC.exe' || true
+            exit 1
+          fi
+          "$iscc" "//DAppVersion=$RELEASE_VERSION" winui/installer/setup.iss
+          ls -la winui/installer/Output
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: winui-windows-installer
+          path: winui/installer/Output/*.exe
+          if-no-files-found: error
+          retention-days: 30
+
   release:
     name: Publish GitHub Release
     runs-on: ubuntu-24.04
-    needs: [prepare, build]
+    needs: [prepare, build, build-winui]
     permissions:
       contents: write
     steps:
@@ -178,6 +238,13 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: windows-installers
+          path: assets
+          merge-multiple: true
+
+      - name: Download Windows widget installer
+        uses: actions/download-artifact@v4
+        with:
+          name: winui-windows-installer
           path: assets
           merge-multiple: true
 
@@ -222,7 +289,8 @@ jobs:
           - `*.deb` - install with `sudo apt install ./codex-usage-widget_<version>_amd64.deb`.
 
           ### Windows
-          - `* Setup *.exe` - installer with a selectable installation directory.
+          - `CodexUsageWidget-*-win-x64-Setup.exe` - the native WinUI 3 widget. Recommended on Windows 10/11: no Electron runtime, smaller and faster to start.
+          - `* Setup *.exe` - Electron installer with a selectable installation directory.
           - `*.exe` portable - single file, no installation.
 
           Requires the Codex CLI signed in with a ChatGPT plan (`codex login`). On Ubuntu, allow the AppImage sandbox helper to run setuid root, or follow the Linux sandbox note in the README.
