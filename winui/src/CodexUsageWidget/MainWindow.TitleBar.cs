@@ -38,7 +38,10 @@ public sealed partial class MainWindow
     // stale light strip until something forces a non-client redraw. Toggling
     // the caption region through InputNonClientPointerSource is the documented
     // trigger, so re-register it (or clear it in mini mode) right after the
-    // attribute lands.
+    // attribute lands. The rect mirrors UpdateDragRegion()'s expanded-mode
+    // default: the whole client area minus the icon-button row, which WinUI
+    // paints as the caption anyway — exact bounds do not matter for the
+    // invalidation, and AppWindow (SDK 1.7) exposes no frame rect to measure.
     private void RepaintTitleBar()
     {
         var source = InputNonClientPointerSource.GetForWindowId(AppWindow.Id);
@@ -47,8 +50,8 @@ public sealed partial class MainWindow
             source.ClearRegionRects(NonClientRegionKind.Caption);
             return;
         }
-        var frame = AppWindow.Frame;
+        var client = AppWindow.ClientSize;
         source.SetRegionRects(NonClientRegionKind.Caption,
-            new[] { new RectInt32(0, 0, Math.Max(1, frame.Width), Math.Max(1, frame.Height - AppWindow.ClientSize.Height)) });
+            new[] { new RectInt32(0, 0, Math.Max(1, client.Width), Math.Max(1, client.Height - 46)) });
     }
 }
