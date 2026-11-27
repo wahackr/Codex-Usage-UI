@@ -86,6 +86,7 @@ public sealed partial class MainWindow : Window
             "dark" => ElementTheme.Dark,
             _ => ElementTheme.Default,
         };
+        ApplyTitleBarTheme();
     }
 
     private async Task RefreshAsync()

@@ -74,10 +74,10 @@
                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
               </Border>
             </Grid>
-            <Border x:Name="PrimaryTrack" Height="8" Margin="0,14,0,8" CornerRadius="99"
+            <Border x:Name="PrimaryTrack" Height="8" Margin="0,14,0,8" CornerRadius="3"
                     Background="{ThemeResource ControlFillColorDisabledBrush}">
               <Border x:Name="PrimaryBar" Width="0" Height="8" HorizontalAlignment="Left"
-                      CornerRadius="99" Style="{StaticResource BarNormalStyle}" />
+                      CornerRadius="3" Style="{StaticResource BarNormalStyle}" />
             </Border>
             <TextBlock x:Name="PrimaryReset" Text="Waiting for live usage"
                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontSize="11" TextWrapping="Wrap" />
@@ -101,10 +101,10 @@
                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
               </Border>
             </Grid>
-            <Border x:Name="SecondaryTrack" Height="8" Margin="0,14,0,8" CornerRadius="99"
+            <Border x:Name="SecondaryTrack" Height="8" Margin="0,14,0,8" CornerRadius="3"
                     Background="{ThemeResource ControlFillColorDisabledBrush}">
               <Border x:Name="SecondaryBar" Width="0" Height="8" HorizontalAlignment="Left"
-                      CornerRadius="99" Style="{StaticResource BarNormalStyle}" />
+                      CornerRadius="3" Style="{StaticResource BarNormalStyle}" />
             </Border>
             <TextBlock x:Name="SecondaryReset" Text="Waiting for live usage"
                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontSize="11" TextWrapping="Wrap" />
