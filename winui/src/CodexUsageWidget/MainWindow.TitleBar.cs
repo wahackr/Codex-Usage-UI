@@ -1,5 +1,8 @@
 using System.Runtime.InteropServices;
+using Microsoft.UI.Input;
+using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
+using Windows.Graphics;
 
 namespace CodexUsageWidget;
 
@@ -28,5 +31,24 @@ public sealed partial class MainWindow
         {
             DwmSetWindowAttribute(hwnd, DwmwaUseImmersiveDarkModeBefore20, ref dark, sizeof(int));
         }
+    }
+
+    // Setting the attribute does not repaint a caption that already exists:
+    // expanding from mini mode rebuilds the frame and DWM keeps painting the
+    // stale light strip until something forces a non-client redraw. Toggling
+    // the caption region through InputNonClientPointerSource is the documented
+    // trigger, so re-register it (or clear it in mini mode) right after the
+    // attribute lands.
+    private void RepaintTitleBar()
+    {
+        var source = InputNonClientPointerSource.GetForWindowId(AppWindow.Id);
+        if (_miniMode)
+        {
+            source.ClearRegionRects(NonClientRegionKind.Caption);
+            return;
+        }
+        var frame = AppWindow.Frame;
+        source.SetRegionRects(NonClientRegionKind.Caption,
+            new[] { new RectInt32(0, 0, Math.Max(1, frame.Width), Math.Max(1, frame.Height - AppWindow.ClientSize.Height)) });
     }
 }
