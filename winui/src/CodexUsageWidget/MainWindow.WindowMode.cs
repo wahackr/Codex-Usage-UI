@@ -44,8 +44,10 @@ public sealed partial class MainWindow
             presenter.IsMaximizable = !_miniMode;
         }
         // Rebuilding the caption resets it to the light default, so the DWM
-        // dark-mode attribute has to be re-asserted after expanding.
+        // dark-mode attribute has to be re-asserted after expanding — and the
+        // repaint nudge below is what forces DWM to actually redraw it.
         ApplyTitleBarTheme();
+        RepaintTitleBar();
         AppWindow.IsShownInSwitchers = !_miniMode;
         FullView.Visibility = _miniMode ? Visibility.Collapsed : Visibility.Visible;
         Strip.Visibility = _miniMode ? Visibility.Visible : Visibility.Collapsed;
